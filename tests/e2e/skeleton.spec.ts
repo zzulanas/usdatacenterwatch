@@ -3,7 +3,8 @@ import { test, expect } from '@playwright/test';
 test('homepage renders', async ({ page }) => {
   await page.goto('/');
   await expect(page).toHaveTitle(/US Data Center Watch/i);
-  await expect(page.getByTestId('map-placeholder')).toBeVisible();
+  // MapView replaced MapPlaceholder in USD-10
+  await expect(page.getByTestId('map-view')).toBeVisible();
   await expect(page.getByRole('button', { name: /Filters?/i })).toBeVisible();
 });
 
@@ -33,7 +34,7 @@ test('dark mode is the default', async ({ page }) => {
   expect(htmlClass).toMatch(/dark/);
 });
 
-test('no island JS for the homepage Button (W2 verification)', async ({ page }) => {
+test('no dedicated island JS for the homepage Button (W2 verification)', async ({ page }) => {
   // Collect all JS resources loaded on first navigation
   const jsUrls: string[] = [];
   page.on('response', (response) => {
@@ -47,7 +48,8 @@ test('no island JS for the homepage Button (W2 verification)', async ({ page }) 
   // Wait for the page to fully settle
   await page.waitForLoadState('networkidle');
 
-  // The Button component should not have shipped a dedicated client JS chunk.
+  // The Button component should not have shipped a *dedicated* client JS chunk.
+  // Note: MapView (client:only="react") legitimately ships JS — the Button should not.
   // We check that no URL matches a "button-*.js" pattern (Astro island chunk naming).
   const buttonIslandJs = jsUrls.filter((url) => /button[^/]*\.js/i.test(url));
   expect(
