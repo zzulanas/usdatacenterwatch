@@ -12,6 +12,7 @@ function MapPlaceholder({ className }: MapPlaceholderProps) {
         'aspect-[16/10]',
         className
       )}
+      data-testid="map-placeholder"
       aria-label="Map placeholder — MapLibre integration coming in USD-10"
     >
       {/* Grid overlay to suggest a map */}

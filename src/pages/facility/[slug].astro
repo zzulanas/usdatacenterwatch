@@ -3,8 +3,9 @@ import Layout from '@/components/Layout.astro';
 
 // Static build: no facilities loaded yet — stub routes only.
 // USD-8 (ingest pipeline) will populate data/facilities/ and generate real paths.
+// The `test-slug` entry exists solely for E2E smoke testing the route template.
 export function getStaticPaths() {
-  return [];
+  return [{ params: { slug: 'test-slug' } }];
 }
 
 const { slug } = Astro.params;
