@@ -10,5 +10,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
+    // Exclude Playwright E2E tests — those run via `pnpm e2e`, not vitest
+    exclude: ['tests/e2e/**', 'node_modules/**'],
   },
 });

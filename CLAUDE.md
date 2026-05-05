@@ -11,8 +11,9 @@ Astro 6 + React 19 (islands) + TypeScript strict + Tailwind v4 + shadcn/ui (new-
 ```bash
 pnpm dev        # dev server at http://localhost:4321
 pnpm build      # static output → dist/
-pnpm check      # typecheck (astro check) + lint (eslint) + test (vitest) — must pass before PR
+pnpm check      # typecheck + lint + unit tests + e2e — must pass before PR
 pnpm test       # vitest unit tests only
+pnpm e2e        # Playwright E2E tests against pnpm dev (port 4321)
 pnpm format     # prettier -w .
 ```
 
