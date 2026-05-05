@@ -15,6 +15,12 @@ pnpm check      # typecheck + lint + unit tests + e2e — must pass before PR
 pnpm test       # vitest unit tests only
 pnpm e2e        # Playwright E2E tests against pnpm dev (port 4321)
 pnpm format     # prettier -w .
+
+# Database (server-only — never run from browser context)
+pnpm db:generate  # generate migration SQL from schema diff (after editing src/db/schema.ts)
+pnpm db:migrate   # apply pending migrations to DATABASE_URL (reads from env)
+pnpm db:studio    # open Drizzle Studio UI for the connected database
+pnpm db:push      # push schema directly to DB — prototyping only, never in CI
 ```
 
 ## Static read-path invariant (non-negotiable)
