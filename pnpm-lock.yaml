@@ -35,9 +35,6 @@ importers:
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@neondatabase/serverless@1.1.0)(@types/pg@8.20.0)(pg@8.20.0)
-      pg:
-        specifier: ^8.20.0
-        version: 8.20.0
       react:
         specifier: ^19.2.5
         version: 19.2.5
@@ -90,6 +87,9 @@ importers:
       lucide-react:
         specifier: ^1.14.0
         version: 1.14.0(react@19.2.5)
+      pg:
+        specifier: ^8.20.0
+        version: 8.20.0
       prettier:
         specifier: ^3.8.3
         version: 3.8.3

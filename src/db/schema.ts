@@ -37,7 +37,14 @@ export const geographyPoint = customType<{
     return 'geography(Point, 4326)';
   },
   toDriver(value: LatLng): string {
-    return `SRID=4326;POINT(${value.lng} ${value.lat})`;
+    const lng = Number(value.lng);
+    const lat = Number(value.lat);
+    if (!Number.isFinite(lng) || !Number.isFinite(lat)) {
+      throw new Error(
+        `geographyPoint.toDriver: lng/lat must be finite numbers, got ${JSON.stringify(value)}`
+      );
+    }
+    return `SRID=4326;POINT(${lng} ${lat})`;
   },
   fromDriver(value: string): LatLng {
     // PostGIS returns hex WKB by default via the serverless HTTP driver.
