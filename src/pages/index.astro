@@ -1,0 +1,24 @@
+---
+import Layout from '@/components/Layout.astro';
+import MapPlaceholder from '@/components/MapPlaceholder';
+import { Button } from '@/components/ui/button';
+---
+
+<Layout title="US Data Center Watch — Map">
+  <div class="flex flex-col h-[calc(100vh-3.5rem)]">
+    <!-- Filter bar stub -->
+    <div class="border-b border-neutral-800 px-4 py-2 flex items-center gap-3">
+      <Button variant="outline" size="sm">
+        Filters
+      </Button>
+      <span class="text-xs text-neutral-500 font-mono">
+        0 facilities loaded — data pipeline coming in USD-8
+      </span>
+    </div>
+
+    <!-- Map area -->
+    <div class="flex-1 p-4">
+      <MapPlaceholder />
+    </div>
+  </div>
+</Layout>

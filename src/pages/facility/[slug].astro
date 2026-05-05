@@ -1,0 +1,23 @@
+---
+import Layout from '@/components/Layout.astro';
+
+// Static build: no facilities loaded yet — stub routes only.
+// USD-8 (ingest pipeline) will populate data/facilities/ and generate real paths.
+// The `test-slug` entry exists solely for E2E smoke testing the route template.
+export function getStaticPaths() {
+  return [{ params: { slug: 'test-slug' } }];
+}
+
+const { slug } = Astro.params;
+---
+
+<Layout title={`${slug} — US Data Center Watch`}>
+  <div class="max-w-3xl mx-auto px-4 py-12">
+    <h1 class="text-2xl font-semibold text-neutral-100">
+      Facility: <code class="font-mono text-neutral-400">{slug}</code>
+    </h1>
+    <p class="mt-4 text-neutral-400 text-sm">
+      Facility detail page — data pipeline and full panel coming in USD-10+.
+    </p>
+  </div>
+</Layout>
