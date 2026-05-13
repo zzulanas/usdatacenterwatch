@@ -394,6 +394,69 @@ describe('normalizeOsmElement — happy path', () => {
     if (!result) return;
     expect(result.tenant_type).toBe('colo');
   });
+
+  it('record state comes from OSM addr:state even when query state differs', () => {
+    // Bbox queries cross state lines — a Virginia query can return MD/KY/WV
+    // records. The record's `state` must reflect what OSM tagged, not the
+    // CLI arg, so the writer routes the file into the correct state dir.
+    const el = makeWay(
+      9999,
+      {
+        name: 'Cross-State Data Center',
+        operator: 'Digital Realty',
+        'addr:city': 'Baltimore',
+        'addr:state': 'MD',
+        telecom: 'data_center',
+      },
+      { lat: 39.28, lon: -76.6 }
+    );
+    const result = normalizeOsmElement(el, TODAY, 'VA');
+    expect(result).not.toBeNull();
+    if (!result) return;
+    expect(result.state).toBe('MD');
+    expect(result.slug.endsWith('-md')).toBe(true);
+  });
+
+  it('substitutes "{operator} {city}" when OSM name looks like a single building', () => {
+    // OSM ways for hyperscaler campuses often tag one canonical name like
+    // "AWS Building E" — when that record is the dedup root for a multi-
+    // building cluster, the campus-level name is more meaningful than the
+    // single-building reference.
+    const el = makeWay(
+      460175672,
+      {
+        name: 'AWS Building E',
+        operator: 'AWS',
+        'addr:city': 'Ashburn',
+        'addr:state': 'VA',
+        telecom: 'data_center',
+      },
+      { lat: 39.005, lon: -77.485 }
+    );
+    const result = normalizeOsmElement(el, TODAY);
+    expect(result).not.toBeNull();
+    if (!result) return;
+    expect(result.name).toBe('Amazon Web Services Ashburn');
+  });
+
+  it('keeps OSM name when operator is unknown (no campus substitution)', () => {
+    const el = makeWay(
+      7777,
+      {
+        name: 'ACME DC Building 4',
+        operator: 'ACME Hosting',
+        'addr:city': 'Sterling',
+        'addr:state': 'VA',
+        telecom: 'data_center',
+      },
+      { lat: 39.0, lon: -77.4 }
+    );
+    const result = normalizeOsmElement(el, TODAY);
+    expect(result).not.toBeNull();
+    if (!result) return;
+    // ACME is not in HYPERSCALERS or COLOS — leave the OSM name alone
+    expect(result.name).toBe('ACME DC Building 4');
+  });
 });
 
 // ---------------------------------------------------------------------------

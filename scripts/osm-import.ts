@@ -167,6 +167,24 @@ const COLOS = new Set([
   'Stream',
   'AiNET',
   'True North Data Solutions',
+  'TierPoint',
+]);
+
+// OSM names that imply a single building within a larger campus.
+// When the slug represents a multi-building dedup cluster (the 500m radius
+// collapses many ways into one record), the OSM `name` of the first-seen
+// building is misleading as the canonical facility name. Substitute
+// "{operator} {city}" for known operators when these patterns appear.
+// Example: OSM way 460175672 ("AWS Building E") → "Amazon Web Services Ashburn".
+const BUILDING_NAME_PATTERN = /\b(Building|Block|Phase|Wing|Tower|Bldg|DC)\s*[A-Z0-9]+/i;
+
+// Known OSM tagging mistakes that pass the data_center quality filter but
+// represent non-data-center venues. The cleanest fix would be to also check
+// for conflicting primary tags (leisure=fitness_centre, tourism=hotel, etc.)
+// but those vary by venue type. For now we hard-skip by OSM ID; expand the
+// list as future state pilots surface more false positives.
+const OSM_FALSE_POSITIVE_IDS = new Set<string>([
+  'way/300970761', // Golds Gym Ashburn (telecom=data_center applied to a gym)
 ]);
 
 // ---------------------------------------------------------------------------
@@ -275,13 +293,25 @@ export function normalizeOsmElement(
   // Skip if neither name nor operator is present — can't make a meaningful slug
   if (!rawName && !rawOperator) return null;
 
+  // Skip known OSM tagging mistakes (gyms etc. mis-tagged as data centers)
+  if (OSM_FALSE_POSITIVE_IDS.has(`${element.type}/${element.id}`)) return null;
+
   const operator = normalizeOperator(rawOperator ?? rawName ?? '');
-  // Name falls back to "{operator} Data Center" if OSM name is absent
-  const name = rawName ?? `${operator} Data Center`;
 
   const city = tags['addr:city'];
   // Skip if we can't determine the city — slug generation requires it
   if (!city) return null;
+
+  // Name: prefer OSM name, but substitute "{operator} {city}" when the OSM
+  // name looks like a single-building reference inside a larger campus
+  // (e.g. "AWS Building E") and we have a known operator. This avoids
+  // labeling a deduped campus record with one arbitrary building's name.
+  const isKnownOperator = HYPERSCALERS.has(operator) || COLOS.has(operator);
+  const looksLikeOneBuilding =
+    rawName != null && isKnownOperator && BUILDING_NAME_PATTERN.test(rawName);
+  const name = looksLikeOneBuilding
+    ? `${operator} ${city}`
+    : (rawName ?? `${operator} Data Center`);
 
   // State: prefer OSM addr:state, fall back to the --state query argument
   const addrState = tags['addr:state'] ?? queryState;
@@ -629,7 +659,13 @@ async function main() {
 
       batchSlugs.add(normalized.slug);
 
-      const stateDir = join(facilitiesDir, state.toLowerCase());
+      // Route by the record's actual state (from OSM addr:state) rather than
+      // the CLI arg — Overpass bbox queries cross state lines, so a `--state VA`
+      // run can legitimately return MD/KY/WV records and they belong in their
+      // own state directories. Fall back to the CLI arg only when OSM lacks
+      // addr:state and the normalizer couldn't derive one.
+      const targetState = (normalized.state ?? state).toLowerCase();
+      const stateDir = join(facilitiesDir, targetState);
       const filePath = join(stateDir, `${normalized.slug}.yaml`);
       const yaml = renderYaml(normalized, today);
 
@@ -642,10 +678,17 @@ async function main() {
           mkdirSync(stateDir, { recursive: true });
         }
         writeFileSync(filePath, yaml, 'utf-8');
-        console.log(
-          `[${state}]   wrote: data/facilities/${state.toLowerCase()}/${normalized.slug}.yaml`
-        );
+        console.log(`[${state}]   wrote: data/facilities/${targetState}/${normalized.slug}.yaml`);
       }
+
+      // Within-batch proximity dedup: subsequent records get to see this one
+      // as "existing" so a campus that spans two raw Overpass results doesn't
+      // produce duplicate slugs from two close-together buildings.
+      existingFacilities.push({
+        slug: normalized.slug,
+        lat: normalized.location.lat,
+        lng: normalized.location.lng,
+      });
 
       stateImported++;
     }

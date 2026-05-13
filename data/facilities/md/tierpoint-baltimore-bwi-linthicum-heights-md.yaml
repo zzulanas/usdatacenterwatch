@@ -8,21 +8,21 @@
 #   water_source, construction_capex_usd, jobs_construction, jobs_permanent
 #   reported_annual_mwh, reported_annual_gallons, power_sources, subsidies
 #   fips (leave null; a future curation pass fills this in via Census Geocoder)
-slug: 'golds-gym-ashburn-ashburn-va'
-name: 'Golds Gym Ashburn'
-operator: 'Golds Gym Ashburn'
-tenant_type: 'enterprise'
+slug: 'tierpoint-baltimore-bwi-linthicum-heights-md'
+name: 'TierPoint Baltimore BWI'
+operator: 'TierPoint'
+tenant_type: 'colo'
 status: 'operational'
 location:
-  lng: -77.483284
-  lat: 39.0156031
-address: '21625 Red Rum Drive, Ashburn, VA'
-city: 'Ashburn'
-state: 'VA'
+  lng: -76.682834
+  lat: 39.213455
+address: '813 Pinnacle Drive, Linthicum Heights, MD'
+city: 'Linthicum Heights'
+state: 'MD'
 confidence: 'low'
 last_verified: '2026-05-13'
 sources:
-  - url: 'https://www.openstreetmap.org/way/300970761'
+  - url: 'https://www.openstreetmap.org/way/610845529'
     accessed_at: '2026-05-13'
     supports:
       - 'location'

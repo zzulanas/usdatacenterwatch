@@ -9,7 +9,7 @@
 #   reported_annual_mwh, reported_annual_gallons, power_sources, subsidies
 #   fips (leave null; a future curation pass fills this in via Census Geocoder)
 slug: 'equinix-ashburn-va'
-name: 'Equinix Ashburn DC2'
+name: 'Equinix Ashburn'
 operator: 'Equinix'
 tenant_type: 'colo'
 status: 'operational'

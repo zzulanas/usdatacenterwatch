@@ -9,7 +9,7 @@
 #   reported_annual_mwh, reported_annual_gallons, power_sources, subsidies
 #   fips (leave null; a future curation pass fills this in via Census Geocoder)
 slug: 'equinix-manassas-va'
-name: 'Equinix DC14'
+name: 'Equinix Manassas'
 operator: 'Equinix'
 tenant_type: 'colo'
 status: 'operational'

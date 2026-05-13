@@ -9,7 +9,7 @@
 #   reported_annual_mwh, reported_annual_gallons, power_sources, subsidies
 #   fips (leave null; a future curation pass fills this in via Census Geocoder)
 slug: 'amazon-web-services-ashburn-va'
-name: 'AWS Building E'
+name: 'Amazon Web Services Ashburn'
 operator: 'Amazon Web Services'
 tenant_type: 'hyperscaler'
 status: 'operational'
