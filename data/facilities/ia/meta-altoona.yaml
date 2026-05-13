@@ -13,10 +13,22 @@ fips: "19153"
 acres: 520
 sqft: 5000000
 year_built: 2014
+# it_load_mw is derived, not directly published. Meta's 2024 sustainability
+# report disclosed 1,243,306 MWh of annual electricity consumption at the
+# Altoona campus (the second-largest among Meta's owned facilities, per DCD).
+# Back-calculated with the modeling pipeline's default assumptions
+# (PUE 1.10, utilization 0.6, 8760 hr/yr):
+#   215 MW = 1,243,306 MWh / 8760 / 1.10 / 0.6
+# Round-trip property: feeding this number through estimates.ts reproduces
+# the disclosed 1.24 TWh/yr exactly. Confidence: medium because the
+# derivation depends on assumed PUE and utilization; if Meta publishes a
+# different effective PUE for this site, the derivation shifts.
+it_load_mw: 215
+design_pue: 1.10
 construction_capex_usd: 2500000000
 jobs_permanent: 400
 # Fields intentionally omitted because no public source asserts the value:
-#   it_load_mw, total_mw, design_pue (Meta does not publish per-site IT load for Altoona)
+#   total_mw (Meta publishes annual MWh and PUE but not nameplate capacity)
 #   jobs_construction (cumulative figure published — see source — but expressed as
 #     "average of 1,000 workers on-site for 12 years", not a single number)
 #   address (the commonly cited "1601 NE 60th St" was not traced to a primary
@@ -50,3 +62,16 @@ sources:
     supports:
       - year_built
       - operator
+  # Meta's annual electricity disclosure for Altoona is the basis for the
+  # derived it_load_mw above. DCD article summarizes Meta's sustainability
+  # report figure (1,243,306 MWh/yr).
+  - url: https://www.datacenterdynamics.com/en/news/meta-data-center-electricity-consumption-hits-14975gwh-leased-data-center-use-nearly-doubles/
+    accessed_at: "2026-05-13"
+    supports:
+      - it_load_mw
+      - design_pue
+  - url: https://sustainability.atmeta.com/wp-content/uploads/2025/10/Meta_2025-Environmental-Data-Index.pdf
+    accessed_at: "2026-05-13"
+    supports:
+      - it_load_mw
+      - design_pue

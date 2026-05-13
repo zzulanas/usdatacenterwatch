@@ -13,9 +13,20 @@ fips: "37035"
 acres: 465
 sqft: 1000000
 year_built: 2010
+# it_load_mw is derived. DCD reported Apple's Maiden NC data center used
+# 453,000,000 kWh (453 GWh) of electricity in 2023. Back-calculated with
+# Apple's published global average PUE (~1.06) and default utilization 0.6:
+#   ~81 MW = 453,000 MWh / 8760 / 1.06 / 0.6
+# Rounded to 80 MW. This is consistent with older DCK reporting describing
+# the site as drawing "about 40 MW at full capacity" historically, which
+# reflected the original single building rather than the current 6-building
+# campus. Confidence: medium because PUE is global-average not site-specific,
+# and the back-derivation depends on assumed utilization.
+it_load_mw: 80
+design_pue: 1.06
 construction_capex_usd: 4000000000
 # Fields intentionally omitted because no public source asserts the value:
-#   it_load_mw, total_mw, design_pue (Apple does not publish per-site IT load)
+#   total_mw (Apple does not publish per-site nameplate capacity)
 #   address (the widely cited "5977 Startown Rd" was traced only to
 #     datacenters.com, a tertiary aggregator — per the README sourcing rules,
 #     address may not derive solely from an aggregator chain. Re-add when a
@@ -64,3 +75,16 @@ sources:
     accessed_at: "2026-05-13"
     supports:
       - acres
+  # 453 GWh / 2023 annual electricity disclosure — basis for derived it_load_mw.
+  - url: https://www.datacenterdynamics.com/en/news/apple-data-centers-used-more-than-23bn-kwh-of-electricity-in-2023/
+    accessed_at: "2026-05-13"
+    supports:
+      - it_load_mw
+      - design_pue
+  # Older "~40 MW at full capacity" figure for historical context — refers to
+  # the original single-building footprint pre-expansion. Useful as a sanity
+  # check that the current 80 MW derivation is in the right order of magnitude.
+  - url: https://www.datacenterknowledge.com/sustainability/apple-hits-100-renewable-energy-in-its-data-centers
+    accessed_at: "2026-05-13"
+    supports:
+      - it_load_mw
