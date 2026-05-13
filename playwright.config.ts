@@ -1,5 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const port = Number(process.env.PLAYWRIGHT_PORT ?? 4322);
+
 export default defineConfig({
   testDir: './tests/e2e',
   // workers: 1 — maplibre/deck.gl WebGL cold start in Vite dev mode is not
@@ -13,14 +15,15 @@ export default defineConfig({
   reporter: process.env.CI ? 'github' : 'list',
   timeout: 90_000,
   use: {
-    // Port 4322 (canonical e2e port set in USD-10). Local dev defaults to 4321;
-    // running e2e on 4322 lets a developer keep `pnpm dev` open while tests run.
-    baseURL: 'http://localhost:4322',
+    // Port 4322 by default — local dev uses 4321, so e2e on a separate port lets
+    // a developer keep `pnpm dev` open while running tests. Override with
+    // PLAYWRIGHT_PORT in environments where 4322 is occupied (parallel worktrees).
+    baseURL: `http://localhost:${port}`,
     trace: 'retain-on-failure',
   },
   webServer: {
-    command: 'pnpm dev --port 4322',
-    port: 4322,
+    command: `pnpm dev --port ${port}`,
+    port,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },
