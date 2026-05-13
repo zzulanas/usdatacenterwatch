@@ -1,0 +1,49 @@
+slug: google-council-bluffs-ia
+name: Council Bluffs Data Center Campus
+operator: Google
+tenant_type: hyperscaler
+status: operational
+location:
+  lng: -95.8403
+  lat: 41.1828
+city: Council Bluffs
+county: Pottawattamie
+state: IA
+fips: "19155"
+sqft: 2900000
+year_built: 2009
+cooling_type: evap
+construction_capex_usd: 6800000000
+# Fields intentionally omitted because no public source asserts the value:
+#   it_load_mw, total_mw, design_pue (Google does not publish per-site IT load)
+#   acres (campus acreage not in Google's public materials)
+#   address (Google does not publish a single street address for the campus)
+#   jobs_construction, jobs_permanent (per-site headcount not disclosed)
+#   water_source, power_sources (per-site grid mix not disclosed)
+confidence: medium
+last_verified: "2026-05-13"
+sources:
+  - url: https://datacenters.google/locations/iowa/
+    accessed_at: "2026-05-13"
+    supports:
+      - name
+      - operator
+      - city
+      - state
+      - year_built
+      - construction_capex_usd
+  - url: https://www.datacenterfrontier.com/cloud/article/11427613/google-has-invested-5-billion-in-its-iowa-data-centers
+    accessed_at: "2026-05-13"
+    supports:
+      - construction_capex_usd
+      - year_built
+  - url: https://www.datacenterknowledge.com/hyperscalers/google-confirms-data-center-in-council-buffs-iowa
+    accessed_at: "2026-05-13"
+    supports:
+      - year_built
+      - operator
+  - url: https://baxtel.com/data-center/google-council-bluffs-southlands
+    accessed_at: "2026-05-13"
+    supports:
+      - sqft
+      - location

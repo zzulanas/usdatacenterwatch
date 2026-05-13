@@ -1,0 +1,51 @@
+slug: meta-eagle-mountain-ut
+name: Eagle Mountain Data Center Campus
+operator: Meta
+tenant_type: hyperscaler
+status: operational
+location:
+  lng: -112.0080
+  lat: 40.3147
+address: 1275 N Community Circle, Eagle Mountain, UT 84005
+city: Eagle Mountain
+county: Utah
+state: UT
+fips: "49049"
+acres: 500
+sqft: 4500000
+year_built: 2021
+cooling_type: evap
+total_mw: 300
+construction_capex_usd: 1500000000
+# Fields intentionally omitted because no public source asserts the value:
+#   it_load_mw, design_pue (campus total power capacity is the only public figure;
+#     without it_load_mw the modeling pipeline emits no estimate row, so this
+#     facility renders without computed GWh/gallons until IT load is sourced)
+#   jobs_construction, jobs_permanent (Meta does not publish per-site headcount)
+#   water_source, power_sources (renewable tariff disclosed at corporate level
+#     but per-site grid mix is not broken out)
+confidence: medium
+last_verified: "2026-05-13"
+sources:
+  - url: https://datacenters.atmeta.com/asset/eagle-mountain-data-center-sheet/
+    accessed_at: "2026-05-13"
+    supports:
+      - name
+      - operator
+      - address
+      - year_built
+      - sqft
+      - total_mw
+      - acres
+  - url: https://www.datacenterdynamics.com/en/news/meta-expands-eagle-mountain-data-center-utah/
+    accessed_at: "2026-05-13"
+    supports:
+      - sqft
+      - construction_capex_usd
+      - total_mw
+  - url: https://baxtel.com/data-center/meta-eagle-mountain-utah-campus
+    accessed_at: "2026-05-13"
+    supports:
+      - location
+      - county
+      - operator

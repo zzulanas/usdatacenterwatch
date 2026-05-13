@@ -1,0 +1,45 @@
+slug: google-lenoir-nc
+name: Lenoir Data Center
+operator: Google
+tenant_type: hyperscaler
+status: operational
+location:
+  lng: -81.5395
+  lat: 35.8852
+address: 708 Lynhaven Dr, Lenoir, NC 28645
+city: Lenoir
+county: Caldwell
+state: NC
+fips: "37027"
+sqft: 337000
+year_built: 2008
+construction_capex_usd: 1200000000
+# Fields intentionally omitted because no public source asserts the value:
+#   it_load_mw, total_mw, design_pue (Google does not publish per-site IT load)
+#   acres (campus acreage not in public materials; only the 38-acre expansion
+#     parcel announced in 2026 is publicly sized)
+#   cooling_type, water_source (not in public materials for this site)
+#   jobs_construction, jobs_permanent (per-site headcount not disclosed)
+#   power_sources (per-site grid mix not disclosed)
+confidence: medium
+last_verified: "2026-05-13"
+sources:
+  - url: https://www.google.com/about/datacenters/locations/lenoir/
+    accessed_at: "2026-05-13"
+    supports:
+      - name
+      - operator
+      - city
+      - state
+      - year_built
+  - url: https://www.datacenterdynamics.com/en/news/google-pledges-1bn-investment-in-north-carolina-data-centers/
+    accessed_at: "2026-05-13"
+    supports:
+      - construction_capex_usd
+      - sqft
+  - url: https://baxtel.com/data-center/google-lenoir-nc
+    accessed_at: "2026-05-13"
+    supports:
+      - sqft
+      - year_built
+      - address

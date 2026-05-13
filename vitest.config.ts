@@ -10,7 +10,9 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    // Exclude Playwright E2E tests — those run via `pnpm e2e`, not vitest
-    exclude: ['tests/e2e/**', 'node_modules/**'],
+    // Exclude Playwright E2E tests — those run via `pnpm e2e`, not vitest.
+    // Also exclude .claude/** so vitest doesn't recurse into agent worktrees
+    // (their own node_modules contain thousands of upstream tests).
+    exclude: ['tests/e2e/**', 'node_modules/**', '.claude/**'],
   },
 });

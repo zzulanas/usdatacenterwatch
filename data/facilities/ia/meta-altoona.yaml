@@ -1,0 +1,52 @@
+slug: meta-altoona-ia
+name: Altoona Data Center Campus
+operator: Meta
+tenant_type: hyperscaler
+status: operational
+location:
+  lng: -93.4197
+  lat: 41.6336
+city: Altoona
+county: Polk
+state: IA
+fips: "19153"
+acres: 520
+sqft: 5000000
+year_built: 2014
+construction_capex_usd: 2500000000
+jobs_permanent: 400
+# Fields intentionally omitted because no public source asserts the value:
+#   it_load_mw, total_mw, design_pue (Meta does not publish per-site IT load for Altoona)
+#   jobs_construction (cumulative figure published — see source — but expressed as
+#     "average of 1,000 workers on-site for 12 years", not a single number)
+#   address (the commonly cited "1601 NE 60th St" was not traced to a primary
+#     source during curation — add when a Polk County parcel/permit citation
+#     can be attached)
+#   cooling_type (Meta info-sheet for Altoona does not disclose cooling type
+#     in the public materials I could read)
+#   water_source, power_sources (per-site grid mix not disclosed)
+confidence: medium
+last_verified: "2026-05-13"
+sources:
+  - url: https://datacenters.atmeta.com/asset/altoona-data-center-info-sheet/
+    accessed_at: "2026-05-13"
+    supports:
+      - name
+      - operator
+      - city
+      - state
+      - year_built
+      - sqft
+      - acres
+      - construction_capex_usd
+      - jobs_permanent
+  - url: https://www.datacenterfrontier.com/cloud/article/11427725/meta-adds-more-data-centers-in-iowa-pushing-campus-to-5-million-sf
+    accessed_at: "2026-05-13"
+    supports:
+      - sqft
+      - acres
+  - url: https://www.datacenterknowledge.com/hyperscalers/facebook-to-build-third-data-center-in-iowa
+    accessed_at: "2026-05-13"
+    supports:
+      - year_built
+      - operator
