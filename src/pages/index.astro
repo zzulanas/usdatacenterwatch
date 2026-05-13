@@ -1,6 +1,6 @@
 ---
 import Layout from '@/components/Layout.astro';
-import MapPlaceholder from '@/components/MapPlaceholder';
+import MapView from '@/components/MapView';
 import { Button } from '@/components/ui/button';
 ---
 
@@ -12,13 +12,13 @@ import { Button } from '@/components/ui/button';
         Filters
       </Button>
       <span class="text-xs text-neutral-500 font-mono">
-        0 facilities loaded — data pipeline coming in USD-8
+        5 seed facilities — live data pipeline coming in USD-11
       </span>
     </div>
 
-    <!-- Map area -->
-    <div class="flex-1 p-4">
-      <MapPlaceholder />
+    <!-- Map area — full-bleed, client:only to keep maplibre off SSR -->
+    <div class="flex-1">
+      <MapView client:only="react" />
     </div>
   </div>
 </Layout>
