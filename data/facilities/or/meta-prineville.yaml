@@ -1,0 +1,53 @@
+slug: meta-prineville-or
+name: Prineville Data Center Campus
+operator: Meta
+tenant_type: hyperscaler
+status: operational
+location:
+  lng: -120.8338
+  lat: 44.3013
+address: 935 SE Connect Way, Prineville, OR 97754
+city: Prineville
+county: Crook
+state: OR
+fips: "41013"
+acres: 415
+year_built: 2011
+it_load_mw: 250
+total_mw: 340
+design_pue: 1.10
+cooling_type: evap
+water_source: well
+construction_capex_usd: 2000000000
+jobs_construction: 1500
+# Fields intentionally omitted because no public source asserts the value:
+#   jobs_permanent (Meta does not publish per-site headcount)
+#   power_sources (per-campus grid mix not disclosed)
+# These will be added when primary sources are located (USD-15+ subsidy/jobs pass).
+confidence: high
+last_verified: "2026-05-05"
+sources:
+  - url: https://sustainability.atmeta.com/2023-sustainability-report/
+    accessed_at: "2026-05-05"
+    supports:
+      - operator
+      - design_pue
+      - cooling_type
+  - url: https://www.opb.org/news/article/facebook-meta-prineville-oregon-expansion-2022/
+    accessed_at: "2026-05-05"
+    supports:
+      - jobs_construction
+      - acres
+      - construction_capex_usd
+  - url: https://www.oregonlive.com/silicon-forest/2011/01/facebook_brings_data_center_to.html
+    accessed_at: "2026-05-05"
+    supports:
+      - year_built
+      - name
+      - address
+  - url: https://www.datacenterknowledge.com/data-center-facilities/meta-prineville-data-center
+    accessed_at: "2026-05-05"
+    supports:
+      - it_load_mw
+      - total_mw
+      - water_source

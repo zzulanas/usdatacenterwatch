@@ -13,6 +13,8 @@ export default defineConfig({
   reporter: process.env.CI ? 'github' : 'list',
   timeout: 90_000,
   use: {
+    // Port 4322 (canonical e2e port set in USD-10). Local dev defaults to 4321;
+    // running e2e on 4322 lets a developer keep `pnpm dev` open while tests run.
     baseURL: 'http://localhost:4322',
     trace: 'retain-on-failure',
   },
