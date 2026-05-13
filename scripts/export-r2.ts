@@ -28,10 +28,6 @@
 
 import { createHash } from 'node:crypto';
 import { gzipSync } from 'node:zlib';
-import { execFileSync } from 'node:child_process';
-import { writeFileSync, unlinkSync } from 'node:fs';
-import { join } from 'node:path';
-import { tmpdir } from 'node:os';
 import pg from 'pg';
 
 const { Client } = pg;
@@ -266,34 +262,42 @@ function shapeFacilities(rows: FacilityRow[]): FacilityDataset[] {
 // R2 upload via wrangler CLI
 // ---------------------------------------------------------------------------
 
-function uploadToR2(
+/**
+ * Uploads a Buffer to R2 via the Cloudflare REST API.
+ * Uses fetch (available in Node 18+) — no child_process or SDK required.
+ * Content-Encoding is sent as a header so R2 stores and serves it correctly.
+ */
+async function uploadToR2(
+  accountId: string,
   bucketName: string,
   objectKey: string,
-  localPath: string,
+  body: Buffer,
   contentType: string,
   contentEncoding?: string
-): void {
-  const args = [
-    'wrangler',
-    'r2',
-    'object',
-    'put',
-    `${bucketName}/${objectKey}`,
-    '--file',
-    localPath,
-    '--content-type',
-    contentType,
-  ];
+): Promise<void> {
+  const cfToken = process.env['CLOUDFLARE_API_TOKEN'];
+  if (!cfToken) throw new Error('CLOUDFLARE_API_TOKEN not set');
 
+  const url = `https://api.cloudflare.com/client/v4/accounts/${accountId}/r2/buckets/${bucketName}/objects/${objectKey}`;
+
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${cfToken}`,
+    'Content-Type': contentType,
+  };
   if (contentEncoding) {
-    args.push('--content-encoding', contentEncoding);
+    headers['Content-Encoding'] = contentEncoding;
   }
 
-  // wrangler reads CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID from env
-  execFileSync('npx', args, {
-    stdio: ['pipe', 'pipe', 'pipe'],
-    env: { ...process.env },
+  const res = await fetch(url, {
+    method: 'PUT',
+    headers,
+    body,
   });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`R2 upload failed [${res.status}] ${objectKey}: ${text}`);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -363,44 +367,24 @@ async function main() {
 
   const facilitiesKey = `facilities-${hash}.json.gz`;
 
-  // --- Write to temp files ---
-  const tmpFacilitiesPath = join(tmpdir(), facilitiesKey);
-  const tmpManifestPath = join(tmpdir(), 'manifest.json');
+  const manifest: Manifest = {
+    version: '1',
+    generated_at: generatedAt,
+    facilities_url: facilitiesKey,
+    facility_count: facilities.length,
+    methodology_version: METHODOLOGY_VERSION,
+  };
+  const manifestBytes = Buffer.from(JSON.stringify(manifest, null, 2), 'utf-8');
 
-  try {
-    writeFileSync(tmpFacilitiesPath, gzipped);
+  // --- Upload facilities file ---
+  console.log(`\nUploading ${facilitiesKey} to R2 bucket "${bucketName}" …`);
+  await uploadToR2(cfAccount, bucketName, facilitiesKey, gzipped, 'application/json', 'gzip');
+  console.log(`  ✓ Uploaded ${facilitiesKey}`);
 
-    const manifest: Manifest = {
-      version: '1',
-      generated_at: generatedAt,
-      facilities_url: facilitiesKey,
-      facility_count: facilities.length,
-      methodology_version: METHODOLOGY_VERSION,
-    };
-    writeFileSync(tmpManifestPath, JSON.stringify(manifest, null, 2), 'utf-8');
-
-    // --- Upload facilities file ---
-    console.log(`\nUploading ${facilitiesKey} to R2 bucket "${bucketName}" …`);
-    uploadToR2(bucketName, facilitiesKey, tmpFacilitiesPath, 'application/json', 'gzip');
-    console.log(`  ✓ Uploaded ${facilitiesKey}`);
-
-    // --- Upload manifest ---
-    console.log('Uploading manifest.json …');
-    uploadToR2(bucketName, 'manifest.json', tmpManifestPath, 'application/json');
-    console.log('  ✓ Uploaded manifest.json');
-  } finally {
-    // Clean up temp files
-    try {
-      unlinkSync(tmpFacilitiesPath);
-    } catch {
-      // ignore
-    }
-    try {
-      unlinkSync(tmpManifestPath);
-    } catch {
-      // ignore
-    }
-  }
+  // --- Upload manifest ---
+  console.log('Uploading manifest.json …');
+  await uploadToR2(cfAccount, bucketName, 'manifest.json', manifestBytes, 'application/json');
+  console.log('  ✓ Uploaded manifest.json');
 
   // --- Summary ---
   console.log('\n--- Export summary ---');
