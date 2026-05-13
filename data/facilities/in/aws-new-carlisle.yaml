@@ -1,0 +1,65 @@
+slug: amazon-web-services-new-carlisle-in
+name: Project Rainier (New Carlisle Data Center Campus)
+operator: Amazon Web Services
+tenant_type: hyperscaler
+status: under_construction
+location:
+  lng: -86.5097
+  lat: 41.7000
+city: New Carlisle
+county: St. Joseph
+state: IN
+fips: "18141"
+year_built: 2025
+total_mw: 2200
+construction_capex_usd: 11000000000
+jobs_permanent: 1000
+# Notes:
+#   - status: under_construction. As of October 2025, 7 buildings are online
+#     and 2 more campuses (within Project Rainier) are still being built;
+#     the full 30-building, 2.2 GW buildout is incomplete.
+#   - total_mw: 2,200 = the "more than 2.2 gigawatts" disclosed in DCD's
+#     coverage of the October 2025 milestone (Anthropic-training capacity).
+#   - construction_capex_usd: $11B = Indiana Economic Development Corp's
+#     stated investment figure, the largest capital commitment in state
+#     history. Confirmed by Gov. Holcomb's office.
+#   - This site trains Claude (Anthropic) models on AWS's custom Trainium
+#     chips at scale. Project codename: "Rainier".
+# Fields intentionally omitted because no public source asserts the value:
+#   it_load_mw, design_pue (AWS has never published per-site IT load; the
+#     2.2 GW figure is total facility power draw)
+#   sqft, acres (30-building campus footprint not consolidated in public
+#     materials; per-building specs vary)
+#   cooling_type, water_source (AWS has not disclosed for this site)
+#   reported_annual_mwh (campus is mid-buildout; partial-year figures not
+#     yet published)
+confidence: high
+last_verified: "2026-05-13"
+sources:
+  - url: https://www.datacenterdynamics.com/en/news/aws-breaks-ground-on-11bn-data-center-campus-in-indiana/
+    accessed_at: "2026-05-13"
+    supports:
+      - name
+      - operator
+      - city
+      - state
+      - status
+      - construction_capex_usd
+      - total_mw
+  - url: https://iedc.in.gov/events/news/details/2024/04/25/gov.-holcomb-announces-amazon-web-services-plans-to-invest-11b-to-create-a-new-data-center-campus-in-northern-indiana
+    accessed_at: "2026-05-13"
+    supports:
+      - construction_capex_usd
+      - jobs_permanent
+      - operator
+  - url: https://www.cnbc.com/2025/10/29/amazon-opens-11-billion-ai-data-center-project-rainier-in-indiana.html
+    accessed_at: "2026-05-13"
+    supports:
+      - name
+      - status
+      - total_mw
+  - url: https://datacenter.news/story/aws-s-11bn-indiana-data-centre-powers-anthropic-s-ai-growth
+    accessed_at: "2026-05-13"
+    supports:
+      - operator
+      - total_mw

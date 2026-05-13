@@ -1,0 +1,59 @@
+slug: google-mesa-az
+name: Mesa Data Center Campus
+operator: Google
+tenant_type: hyperscaler
+status: under_construction
+location:
+  lng: -111.6750
+  lat: 33.3470
+address: NW corner of Elliot Road and Sossaman Road, Mesa, AZ
+city: Mesa
+county: Maricopa
+state: AZ
+fips: "04013"
+acres: 187
+sqft: 750000
+year_built: 2025
+cooling_type: air
+construction_capex_usd: 1000000000
+# Notes:
+#   - status: under_construction. Phase 1 (288,530 sqft) was projected to go
+#     live July 2025. Subsequent phases tied to milestones in 2027 and 2029,
+#     with the full 750,000 sqft buildout by 2030.
+#   - cooling_type: air. Google explicitly chose air cooling for Mesa because
+#     of Arizona's water scarcity; cited in multiple primary sources.
+#   - construction_capex_usd: original announcement was $600M; the buildout
+#     contract has since exceeded $1B per construction-dive and the milestone
+#     framework requires a minimum $1B spend by 2029. Using the $1B figure.
+# Fields intentionally omitted because no public source asserts the value:
+#   it_load_mw, total_mw, design_pue (Google does not publish per-site IT load;
+#     the 430 MW renewable PPA figure is procurement-side, not facility load)
+#   water_source (air-cooled, so water draw is minimal — not the dominant
+#     story for this site)
+#   jobs_construction, jobs_permanent (not consistently published)
+confidence: high
+last_verified: "2026-05-13"
+sources:
+  - url: https://www.datacenterdynamics.com/en/news/google-breaks-ground-on-mesa-data-center-campus-in-arizona/
+    accessed_at: "2026-05-13"
+    supports:
+      - name
+      - operator
+      - status
+      - sqft
+      - year_built
+  - url: https://www.constructiondive.com/news/google-data-center-mesa-arizona/693029/
+    accessed_at: "2026-05-13"
+    supports:
+      - construction_capex_usd
+      - acres
+  - url: https://www.12news.com/article/news/local/valley/google-is-building-a-600-million-data-center-in-mesa-that-wont-use-water-to-cool-storage-units/75-423d5f59-5c3e-4160-b587-0a328eec9a83
+    accessed_at: "2026-05-13"
+    supports:
+      - cooling_type
+      - construction_capex_usd
+  - url: https://www.latitudemedia.com/news/in-lieu-of-water-cooling-google-locks-down-renewables-for-mesa-data-center/
+    accessed_at: "2026-05-13"
+    supports:
+      - cooling_type
+      - operator

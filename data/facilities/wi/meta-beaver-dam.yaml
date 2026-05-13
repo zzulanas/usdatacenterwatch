@@ -1,0 +1,56 @@
+slug: meta-beaver-dam-wi
+name: Beaver Dam Data Center
+operator: Meta
+tenant_type: hyperscaler
+status: announced
+location:
+  lng: -88.8373
+  lat: 43.4578
+city: Beaver Dam
+county: Dodge
+state: WI
+fips: "55027"
+sqft: 700000
+year_built: 2027
+total_mw: 220
+construction_capex_usd: 1000000000
+# Notes:
+#   - status: announced. Meta has filed and obtained local approvals but
+#     ground-breaking and full construction had not begun as of WEDC's
+#     November 2025 fact sheet. Online date is 2027. Distinct from
+#     under_construction which we reserve for sites with active builds.
+#   - This is Meta's 26th US data center campus and 30th globally per the
+#     atmeta.com announcement.
+# Fields intentionally omitted because no public source asserts the value:
+#   it_load_mw, design_pue (the 220 MW is total facility draw per WEDC; Meta
+#     hasn't published the IT/total split for Beaver Dam yet)
+#   acres (campus footprint not disclosed in initial announcement materials)
+#   cooling_type, water_source (not yet published)
+#   reported_annual_mwh (not yet operational)
+#   jobs_construction (1,000+ peak construction cited but not as a single
+#     number suitable for the field)
+confidence: high
+last_verified: "2026-05-13"
+sources:
+  - url: https://datacenters.atmeta.com/2025/11/hello-beaver-dam/
+    accessed_at: "2026-05-13"
+    supports:
+      - name
+      - operator
+      - city
+      - state
+      - status
+      - sqft
+      - year_built
+  - url: https://wedc.org/meta-state-and-local-officials-announce-1-billion-data-center-investment-in-beaver-dam-project/
+    accessed_at: "2026-05-13"
+    supports:
+      - construction_capex_usd
+      - total_mw
+      - sqft
+  - url: https://www.ci.beaverdam.wi.gov/DocumentCenter/View/2458
+    accessed_at: "2026-05-13"
+    supports:
+      - total_mw
+      - status
+      - operator

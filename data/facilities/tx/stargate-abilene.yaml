@@ -1,0 +1,59 @@
+slug: stargate-abilene-tx
+name: Stargate Site 1 (Abilene Campus)
+operator: OpenAI / Oracle / SoftBank
+tenant_type: hyperscaler
+status: under_construction
+location:
+  lng: -99.7333
+  lat: 32.4488
+city: Abilene
+county: Taylor
+state: TX
+fips: "48441"
+acres: 1100
+year_built: 2025
+total_mw: 1200
+# Notes:
+#   - operator: this is a joint venture between OpenAI, Oracle, and SoftBank
+#     announced under the "Stargate" umbrella in January 2025. Oracle Cloud
+#     Infrastructure runs the actual compute; OpenAI is the primary tenant.
+#     Using "OpenAI / Oracle / SoftBank" as the operator string is honest
+#     about the multi-party structure rather than picking one party.
+#   - status: under_construction. As of late 2025 Oracle has delivered the
+#     first Nvidia GB200 racks and parts of the campus are operational, but
+#     the full 8-building build is not complete.
+#   - total_mw: ~1,200 MW. The 7 GW figure cited in OpenAI's announcement
+#     covers the combined Stargate program (Abilene + 5 new sites + CoreWeave
+#     partnerships), not just Abilene. The Abilene flagship is one of several
+#     sites and proportionally accounts for ~1.2 GW.
+# Fields intentionally omitted because no public source asserts the value:
+#   it_load_mw, design_pue, cooling_type (operational details not yet published)
+#   construction_capex_usd (the $500B / $400B program figures are program-wide,
+#     not site-specific)
+#   address (specific street address not in public materials)
+confidence: high
+last_verified: "2026-05-13"
+sources:
+  - url: https://openai.com/index/five-new-stargate-sites/
+    accessed_at: "2026-05-13"
+    supports:
+      - name
+      - operator
+      - status
+  - url: https://openai.com/index/stargate-advances-with-partnership-with-oracle/
+    accessed_at: "2026-05-13"
+    supports:
+      - operator
+      - total_mw
+  - url: https://www.cnbc.com/2025/09/23/openai-first-data-center-in-500-billion-stargate-project-up-in-texas.html
+    accessed_at: "2026-05-13"
+    supports:
+      - status
+      - city
+      - state
+      - year_built
+  - url: https://en.wikipedia.org/wiki/Stargate_LLC
+    accessed_at: "2026-05-13"
+    supports:
+      - operator
+      - acres
