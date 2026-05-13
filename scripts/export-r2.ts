@@ -273,7 +273,8 @@ async function uploadToR2(
   objectKey: string,
   body: Buffer,
   contentType: string,
-  contentEncoding?: string
+  contentEncoding?: string,
+  cacheControl?: string
 ): Promise<void> {
   const cfToken = process.env['CLOUDFLARE_API_TOKEN'];
   if (!cfToken) throw new Error('CLOUDFLARE_API_TOKEN not set');
@@ -286,6 +287,9 @@ async function uploadToR2(
   };
   if (contentEncoding) {
     headers['Content-Encoding'] = contentEncoding;
+  }
+  if (cacheControl) {
+    headers['Cache-Control'] = cacheControl;
   }
 
   const res = await fetch(url, {
@@ -377,13 +381,34 @@ async function main() {
   const manifestBytes = Buffer.from(JSON.stringify(manifest, null, 2), 'utf-8');
 
   // --- Upload facilities file ---
+  // Hash-named blob is content-addressed: contents are immutable, so we can
+  // cache it forever. `immutable` tells browsers never to revalidate it.
   console.log(`\nUploading ${facilitiesKey} to R2 bucket "${bucketName}" …`);
-  await uploadToR2(cfAccount, bucketName, facilitiesKey, gzipped, 'application/json', 'gzip');
+  await uploadToR2(
+    cfAccount,
+    bucketName,
+    facilitiesKey,
+    gzipped,
+    'application/json',
+    'gzip',
+    'public, max-age=31536000, immutable'
+  );
   console.log(`  ✓ Uploaded ${facilitiesKey}`);
 
   // --- Upload manifest ---
+  // The manifest is the pointer that decides which hash is current. It must
+  // never be cached by the browser, otherwise stale deploys would be sticky.
+  // (CF edge can still cache it for a few seconds — that's fine.)
   console.log('Uploading manifest.json …');
-  await uploadToR2(cfAccount, bucketName, 'manifest.json', manifestBytes, 'application/json');
+  await uploadToR2(
+    cfAccount,
+    bucketName,
+    'manifest.json',
+    manifestBytes,
+    'application/json',
+    undefined,
+    'no-cache, must-revalidate'
+  );
   console.log('  ✓ Uploaded manifest.json');
 
   // --- Summary ---

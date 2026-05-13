@@ -47,13 +47,21 @@ function MapView() {
   const overlayRef = useRef<MapboxOverlay | null>(null);
   const [facilities, setFacilities] = useState<FacilityForMap[]>([]);
 
-  // Load facilities from R2 (or fall back to seed data) on mount
+  // Load facilities from R2 (or fall back to seed data) on mount.
+  // `cancelled` guards against setState after unmount if the user navigates
+  // away mid-fetch — the promise will resolve into a no-op instead.
   useEffect(() => {
+    let cancelled = false;
     loadFacilities()
-      .then(setFacilities)
+      .then((data) => {
+        if (!cancelled) setFacilities(data);
+      })
       .catch(() => {
         // loadFacilities always resolves; this catch is a safety net
       });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
