@@ -153,7 +153,10 @@ function buildTooltip(info: PickingInfo, isTouch: boolean): { html: string; styl
   const f = info.object as Facility;
 
   const conf = CONFIDENCE_STYLES[f.confidence];
-  const confidencePill = `<span class="tooltip-confidence" style="display:inline-block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;background:${conf.bg};border:1px solid ${conf.border};color:${conf.fg};padding:1px 6px;border-radius:9999px;margin-left:6px;vertical-align:middle;">${f.confidence}</span>`;
+  // Pill includes the "confidence:" label inline so "high"/"medium"/"low" isn't
+  // ambiguous out of context. The label is rendered dimmer than the value so
+  // the user's eye still lands on the rating itself.
+  const confidencePill = `<span class="tooltip-confidence" style="display:inline-block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;background:${conf.bg};border:1px solid ${conf.border};color:${conf.fg};padding:1px 6px;border-radius:9999px;margin-left:6px;vertical-align:middle;"><span style="opacity:0.7;font-weight:500;">confidence:</span> ${f.confidence}</span>`;
   const statusPill = statusPillHtml(f.status);
 
   const sourceLine = f.source_url
