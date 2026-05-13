@@ -21,6 +21,7 @@ pnpm db:generate  # generate migration SQL from schema diff (after editing src/d
 pnpm db:migrate   # apply pending migrations to DATABASE_URL (reads from env)
 pnpm db:studio    # open Drizzle Studio UI for the connected database
 pnpm db:push      # push schema directly to DB — prototyping only, never in CI
+pnpm ingest       # YAML → Postgres ingest: validate + upsert facilities + compute estimates
 ```
 
 ## Static read-path invariant (non-negotiable)
