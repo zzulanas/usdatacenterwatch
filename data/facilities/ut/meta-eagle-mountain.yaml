@@ -28,7 +28,10 @@ design_pue: 1.10
 it_load_mw: 87
 # Meta's 2023 Environmental Data Index disclosed 504,049 MWh for 2022.
 # Calibration anchor. Replace when a newer MWh disclosure is available.
+# Year stamped explicitly because the campus has grown since 2022 and
+# the calibration table needs to label this row as a stale-vintage anchor.
 reported_annual_mwh: 504049
+reported_annual_mwh_year: 2022
 construction_capex_usd: 1500000000
 # Fields intentionally omitted because no public source asserts the value:
 #   jobs_construction, jobs_permanent (Meta does not publish per-site headcount)
@@ -67,9 +70,11 @@ sources:
   - url: https://sustainability.atmeta.com/wp-content/uploads/2023/07/Meta-2023-Environmental-Data-Index.pdf
     accessed_at: "2026-05-13"
     supports:
+      - reported_annual_mwh
       - it_load_mw
       - design_pue
   - url: https://www.datacenterdynamics.com/en/news/meta-data-center-electricity-consumption-hits-14975gwh-leased-data-center-use-nearly-doubles/
     accessed_at: "2026-05-13"
     supports:
+      - reported_annual_mwh
       - it_load_mw

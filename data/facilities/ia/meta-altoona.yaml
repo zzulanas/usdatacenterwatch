@@ -24,6 +24,7 @@ design_pue: 1.10
 # campus (second-largest among Meta's owned facilities). Used as a
 # calibration anchor for the model — not a model input.
 reported_annual_mwh: 1243306
+reported_annual_mwh_year: 2024
 construction_capex_usd: 2500000000
 jobs_permanent: 400
 # Fields intentionally omitted because no public source asserts the value:
@@ -67,10 +68,12 @@ sources:
   - url: https://www.datacenterdynamics.com/en/news/meta-data-center-electricity-consumption-hits-14975gwh-leased-data-center-use-nearly-doubles/
     accessed_at: "2026-05-13"
     supports:
+      - reported_annual_mwh
       - it_load_mw
       - design_pue
   - url: https://sustainability.atmeta.com/wp-content/uploads/2025/10/Meta_2025-Environmental-Data-Index.pdf
     accessed_at: "2026-05-13"
     supports:
+      - reported_annual_mwh
       - it_load_mw
       - design_pue

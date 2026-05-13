@@ -21,6 +21,7 @@ design_pue: 1.10
 # Meta's Forest City info-sheet discloses 492,786 MWh of annual
 # electricity. Calibration anchor.
 reported_annual_mwh: 492786
+reported_annual_mwh_year: 2024
 # construction_capex_usd here is Meta's disclosed cumulative investment in the
 # Forest City campus over ~14 years (NOT a single-build capex). Treated as the
 # best available capital-investment number per the info-sheet language.
@@ -49,6 +50,7 @@ sources:
       - sqft
       - year_built
       - construction_capex_usd
+      - reported_annual_mwh
       - it_load_mw
       - design_pue
   - url: https://www.datacenterknowledge.com/hyperscalers/facebook-doubling-down-on-data-center-in-north-carolina

@@ -127,7 +127,9 @@ export const FacilityYamlSchema = z
     // verify the model rounds-trips to it within a tolerance. Storing both
     // lets the methodology page show "modeled X vs disclosed Y" transparently.
     reported_annual_mwh: z.number().positive().optional().nullable(),
+    reported_annual_mwh_year: z.number().int().min(1900).max(2100).optional().nullable(),
     reported_annual_gallons: z.number().positive().optional().nullable(),
+    reported_annual_gallons_year: z.number().int().min(1900).max(2100).optional().nullable(),
 
     // Water
     water_source: WaterSourceSchema.optional().nullable(),

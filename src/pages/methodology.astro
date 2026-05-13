@@ -25,7 +25,10 @@ const facilities = Object.values(facilityYamlFiles)
   .filter((r): r is { success: true; data: ReturnType<typeof FacilityYamlSchema.parse> } => r.success)
   .map((r) => r.data);
 
-// Build the calibration table: facilities with reported_annual_mwh disclosures
+// Build the calibration table: facilities with reported_annual_mwh disclosures.
+// The source URL is the first entry in `sources[]` whose `supports[]` array
+// names `reported_annual_mwh` — guarantees every displayed disclosure number
+// has a clickable footnote.
 const calibration = facilities
   .filter((f) => f.reported_annual_mwh != null)
   .map((f) => {
@@ -34,13 +37,17 @@ const calibration = facilities
     const modeledMwh = est.estimated_annual_gwh * 1000;
     const reportedMwh = f.reported_annual_mwh!;
     const variancePct = ((modeledMwh - reportedMwh) / reportedMwh) * 100;
+    const sourceUrl =
+      f.sources.find((s) => s.supports.includes('reported_annual_mwh'))?.url ?? null;
     return {
       slug: f.slug,
       name: f.name,
       operator: f.operator,
       reportedMwh,
+      reportedMwhYear: f.reported_annual_mwh_year ?? null,
       modeledMwh,
       variancePct,
+      sourceUrl,
     };
   })
   .filter((r): r is NonNullable<typeof r> => r != null)
@@ -184,6 +191,7 @@ gallons_per_year = kwh_per_year × wue × climate_factor × 0.264172  # L→US g
         <thead class="text-xs font-mono text-neutral-500 uppercase">
           <tr class="border-b border-neutral-800">
             <th class="text-left py-2 pr-3">Facility</th>
+            <th class="text-right py-2 pr-3">Year</th>
             <th class="text-right py-2 pr-3">Reported MWh/yr</th>
             <th class="text-right py-2 pr-3">Modeled MWh/yr</th>
             <th class="text-right py-2">Variance</th>
@@ -196,6 +204,23 @@ gallons_per_year = kwh_per_year × wue × climate_factor × 0.264172  # L→US g
                 <td class="py-2 pr-3">
                   <span class="text-neutral-100">{row.name}</span>
                   <span class="text-neutral-500"> · {row.operator}</span>
+                  {row.sourceUrl && (
+                    <>
+                      {' '}
+                      <a
+                        href={row.sourceUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="text-neutral-500 hover:text-neutral-300 underline decoration-dotted"
+                        aria-label={`Source for ${row.name} disclosure`}
+                      >
+                        ↗
+                      </a>
+                    </>
+                  )}
+                </td>
+                <td class="py-2 pr-3 text-right text-neutral-500 font-mono">
+                  {row.reportedMwhYear ?? '—'}
                 </td>
                 <td class="py-2 pr-3 text-right text-neutral-100 font-mono">
                   {fmt(row.reportedMwh)}
@@ -214,6 +239,12 @@ gallons_per_year = kwh_per_year × wue × climate_factor × 0.264172  # L→US g
           }
         </tbody>
       </table>
+      <p class="text-xs text-neutral-500 mt-2 italic">
+        Rows stamped with an earlier year (e.g. Eagle Mountain 2022) reflect
+        the most recent publicly disclosed figure; the operating campus may
+        have grown since. We refresh `reported_annual_mwh` on each curation
+        pass when a newer disclosure is available.
+      </p>
       <p class="text-xs text-neutral-500 mt-2">
         {calibration.length} of {facilitiesTotal} facilities currently carry an operator-
         disclosed annual MWh figure. {facilitiesWithModeledEstimates} have a sufficient

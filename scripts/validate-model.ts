@@ -34,8 +34,11 @@ export const VARIANCE_THRESHOLD = 0.05;
 export interface CalibrationRow {
   slug: string;
   reportedAnnualMwh: number;
+  /** Year of the operator disclosure (e.g. 2024). null if not stamped in the YAML. */
+  reportedAnnualMwhYear: number | null;
   modeledAnnualMwh: number;
-  variancePct: number;
+  /** Variance expressed as a fraction (e.g. -0.0161 → -1.61%), not pre-multiplied by 100. */
+  variance: number;
   withinThreshold: boolean;
 }
 
@@ -54,8 +57,9 @@ export function buildCalibrationTable(facilities: FacilityYaml[]): CalibrationRo
     rows.push({
       slug: f.slug,
       reportedAnnualMwh: f.reported_annual_mwh,
+      reportedAnnualMwhYear: f.reported_annual_mwh_year ?? null,
       modeledAnnualMwh,
-      variancePct: variance,
+      variance,
       withinThreshold: Math.abs(variance) <= VARIANCE_THRESHOLD,
     });
   }
@@ -71,12 +75,13 @@ function formatNumber(n: number, decimals = 0): string {
 
 function formatTable(rows: CalibrationRow[]): string {
   if (rows.length === 0) return '(no facilities with reported_annual_mwh)';
-  const header = ['slug', 'reported MWh', 'modeled MWh', 'variance', 'status'];
+  const header = ['slug', 'year', 'reported MWh', 'modeled MWh', 'variance', 'status'];
   const data = rows.map((r) => [
     r.slug,
+    r.reportedAnnualMwhYear?.toString() ?? '-',
     formatNumber(r.reportedAnnualMwh),
     formatNumber(Math.round(r.modeledAnnualMwh)),
-    `${(r.variancePct * 100).toFixed(2)}%`,
+    `${(r.variance * 100).toFixed(2)}%`,
     r.withinThreshold ? 'PASS' : 'DRIFT',
   ]);
   const allRows = [header, ...data];

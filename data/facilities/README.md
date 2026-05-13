@@ -31,7 +31,11 @@ Optional fields cover: location detail (`address`, `city`, `county`, `state`,
 `fips`), physical (`acres`, `sqft`, `year_built`), power (`it_load_mw`,
 `total_mw`, `design_pue`, `cooling_type`, `reported_wue`, `power_sources`),
 water (`water_source`), economic (`construction_capex_usd`, `jobs_*`,
-`subsidies`), provenance (`last_verified`).
+`subsidies`), operator disclosures (`reported_annual_mwh`,
+`reported_annual_mwh_year`, `reported_annual_gallons`,
+`reported_annual_gallons_year` — calibration anchors used by
+`scripts/validate-model.ts` and the `/methodology` page; see "Reporting
+operator disclosures" below), provenance (`last_verified`).
 
 ## Sourcing rules (non-negotiable)
 
@@ -83,6 +87,20 @@ _directly_ backs. Be precise — listing every field name is not the goal.
   acceptable source for `location` since most aggregator coordinates derive
   from geocoded addresses, but the underlying `address` should still trace
   to a primary source if the file asserts one.
+- `reported_annual_mwh` / `reported_annual_gallons`: the operator's own
+  disclosed annual electricity / water figure for the campus, in MWh and
+  US gallons respectively. These are **calibration anchors, not model
+  inputs** — the modeling pipeline reads `it_load_mw` + `design_pue` to
+  PRODUCE annual MWh; this field is the operator's number used to
+  validate the model rounds-trips. When you populate this field:
+  1. Add `reported_annual_mwh` to the `supports[]` of the disclosure URL
+     (so the methodology page's "Reported MWh/yr" column has a footnote).
+  2. Always populate `reported_annual_mwh_year` (or `_gallons_year`) — the
+     calibration table renders the year as a column so readers can spot
+     stale-vintage anchors (e.g. Eagle Mountain currently uses 2022 data).
+  3. When you derive `it_load_mw` from this disclosure, document the math
+     in an inline `# ... derived from reported_annual_mwh:` comment above
+     the `it_load_mw:` line.
 - `it_load_mw`, `total_mw`: hyperscalers rarely publish per-site MW
   capacity directly. Acceptable sourcing paths, ordered by quality:
   1. **Primary direct**: a source that prints the MW figure (rare for

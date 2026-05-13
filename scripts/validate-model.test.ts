@@ -38,7 +38,7 @@ describe('USD-12 model calibration', () => {
           (r) =>
             `  ${r.slug}: reported=${r.reportedAnnualMwh.toLocaleString()} ` +
             `modeled=${Math.round(r.modeledAnnualMwh).toLocaleString()} ` +
-            `variance=${(r.variancePct * 100).toFixed(2)}%`
+            `variance=${(r.variance * 100).toFixed(2)}%`
         )
         .join('\n');
       throw new Error(

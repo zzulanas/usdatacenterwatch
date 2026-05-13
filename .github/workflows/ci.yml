@@ -56,6 +56,14 @@ jobs:
       - name: Unit tests
         run: pnpm test
 
+      # USD-12 calibration gate. The unit-test step above also runs this
+      # check via scripts/validate-model.test.ts; this CLI step is an
+      # explicit, independently-readable signal that "model drift past ±5%
+      # blocks merges" — keeps the methodology page promise true even if
+      # the test ever drifts from the CLI's pre-processing.
+      - name: Validate model against operator disclosures
+        run: pnpm validate-model --strict
+
       - name: E2E tests
         run: pnpm e2e
         env:
