@@ -126,6 +126,12 @@ export const OPERATOR_ALIASES: Record<string, string> = {
   IBM: 'IBM',
   Oracle: 'Oracle',
   Salesforce: 'Salesforce',
+  // CenturyLink rebranded to Lumen Technologies in 2020; OSM still uses old name in some records
+  Centurylink: 'Lumen Technologies',
+  CenturyLink: 'Lumen Technologies',
+  // CoreSite legal entity names map to canonical brand
+  'CoreSite Real Estate 1656 McCarthy, L.P.': 'CoreSite',
+  Coresite: 'CoreSite',
 };
 
 // Known hyperscaler operators (post-alias-normalization)
@@ -168,6 +174,14 @@ const COLOS = new Set([
   'AiNET',
   'True North Data Solutions',
   'TierPoint',
+  // West Coast / CA-pilot additions (verified from OSM data):
+  'Hurricane Electric', // backbone carrier + colo; large Fremont campus (HE.net)
+  'EdgeConneX', // wholesale/hyperscale-edge colo; multiple CA campuses
+  'OpenColo', // Santa Clara colo operator
+  'LightEdge', // colo with multiple US locations; SAN1 campus in San Diego
+  'TPx Communications', // SoCal colo operator (formerly TelePacific)
+  'One Wilshire', // landmark LA carrier hotel / colocation exchange
+  'SV Colo', // Santa Clara colo
 ]);
 
 // OSM names that imply a single building within a larger campus.
@@ -185,6 +199,7 @@ const BUILDING_NAME_PATTERN = /\b(Building|Block|Phase|Wing|Tower|Bldg|DC)\s*[A-
 // list as future state pilots surface more false positives.
 const OSM_FALSE_POSITIVE_IDS = new Set<string>([
   'way/300970761', // Golds Gym Ashburn (telecom=data_center applied to a gym)
+  'way/30666790', // USPS Terminal Annex Los Angeles (federal mail sorting facility, not a commercial DC)
 ]);
 
 // ---------------------------------------------------------------------------

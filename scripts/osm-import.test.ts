@@ -197,6 +197,17 @@ describe('normalizeOperator', () => {
       expect(normalizeOperator(alias)).toBe(canonical);
     }
   });
+
+  // CA-pilot alias additions
+  it('normalizes CenturyLink → Lumen Technologies (post-rebrand)', () => {
+    expect(normalizeOperator('CenturyLink')).toBe('Lumen Technologies');
+    expect(normalizeOperator('Centurylink')).toBe('Lumen Technologies');
+  });
+
+  it('normalizes CoreSite legal entity → CoreSite', () => {
+    expect(normalizeOperator('CoreSite Real Estate 1656 McCarthy, L.P.')).toBe('CoreSite');
+    expect(normalizeOperator('Coresite')).toBe('CoreSite');
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -226,6 +237,35 @@ describe('deriveTenantType', () => {
 
   it('enterprise for unknown operator', () => {
     expect(deriveTenantType('Bank of America')).toBe('enterprise');
+  });
+
+  // CA-pilot additions
+  it('colo for Hurricane Electric', () => {
+    expect(deriveTenantType('Hurricane Electric')).toBe('colo');
+  });
+
+  it('colo for EdgeConneX', () => {
+    expect(deriveTenantType('EdgeConneX')).toBe('colo');
+  });
+
+  it('colo for OpenColo', () => {
+    expect(deriveTenantType('OpenColo')).toBe('colo');
+  });
+
+  it('colo for LightEdge', () => {
+    expect(deriveTenantType('LightEdge')).toBe('colo');
+  });
+
+  it('colo for TPx Communications', () => {
+    expect(deriveTenantType('TPx Communications')).toBe('colo');
+  });
+
+  it('colo for One Wilshire', () => {
+    expect(deriveTenantType('One Wilshire')).toBe('colo');
+  });
+
+  it('colo for SV Colo', () => {
+    expect(deriveTenantType('SV Colo')).toBe('colo');
   });
 });
 
