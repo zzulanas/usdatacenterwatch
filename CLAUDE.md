@@ -28,6 +28,15 @@ pnpm db:studio    # open Drizzle Studio UI for the connected database
 pnpm db:push      # push schema directly to DB — prototyping only, never in CI
 pnpm ingest       # YAML → Postgres ingest: validate + upsert facilities + compute estimates
 pnpm export-r2    # Neon → R2: export facilities-{hash}.json.gz + manifest.json
+pnpm validate-model           # calibrate estimates model against operator disclosures
+pnpm validate-model --strict  # exit non-zero on drift (used by CI)
+
+# OSM bulk import (no DB or env required — writes YAML files directly)
+pnpm osm-import --state VA           # import one state (pilot: Virginia is OSM-dense)
+pnpm osm-import --state VA --dry-run # print what would be written, no file changes
+pnpm osm-import --all                # all CONUS states (run pilot state first)
+# Output goes to data/facilities/{state-lower}/{slug}.yaml, all marked confidence: low.
+# After import: run pnpm test to verify Zod validation, then pnpm ingest to push to DB.
 ```
 
 ## Static read-path invariant (non-negotiable)

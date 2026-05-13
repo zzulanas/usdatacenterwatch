@@ -1,0 +1,34 @@
+# Auto-imported from OpenStreetMap on 2026-05-13 via scripts/osm-import.ts.
+# All fields below are from OSM tags; nothing has been independently verified.
+# Curators: upgrade `confidence` to `medium` after cross-checking against a
+# secondary source (utility filings, county GIS, trade press). See
+# data/facilities/README.md for the sourcing hierarchy.
+# Fields intentionally omitted — OSM does not reliably tag these values:
+#   acres, sqft, year_built, it_load_mw, total_mw, design_pue, cooling_type
+#   water_source, construction_capex_usd, jobs_construction, jobs_permanent
+#   reported_annual_mwh, reported_annual_gallons, power_sources, subsidies
+#   fips (leave null; a future curation pass fills this in via Census Geocoder)
+slug: 'ric2-dc3-sandston-va'
+name: 'RIC2 DC3'
+operator: 'RIC2 DC3'
+tenant_type: 'enterprise'
+status: 'operational'
+location:
+  lng: -77.2418909
+  lat: 37.4860655
+# address omitted: OSM way/1493516625 has a corrupted addr:street where a
+# mapper concatenated raw tag key=value pairs as the street value. Location
+# is valid; address can be re-added when the OSM source is fixed upstream
+# or a curator confirms the real street address.
+city: 'Sandston'
+state: 'VA'
+confidence: 'low'
+last_verified: '2026-05-13'
+sources:
+  - url: 'https://www.openstreetmap.org/way/1493516625'
+    accessed_at: '2026-05-13'
+    supports:
+      - 'location'
+      - 'name'
+      - 'city'
+      - 'state'

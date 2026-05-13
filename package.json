@@ -20,7 +20,8 @@
     "db:push": "drizzle-kit push",
     "ingest": "tsx scripts/ingest.ts",
     "export-r2": "tsx scripts/export-r2.ts",
-    "validate-model": "tsx scripts/validate-model.ts"
+    "validate-model": "tsx scripts/validate-model.ts",
+    "osm-import": "tsx scripts/osm-import.ts"
   },
   "keywords": [],
   "author": "Zach Zulanas <zzulanas@gmail.com>",

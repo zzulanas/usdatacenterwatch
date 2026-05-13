@@ -1,0 +1,144 @@
+{
+  "version": 0.6,
+  "generator": "Overpass API 0.7.62.11 87bfad18",
+  "osm3s": {
+    "timestamp_osm_base": "2026-05-13T17:14:29Z",
+    "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+  },
+  "elements": [
+    {
+      "type": "way",
+      "id": 45776978,
+      "center": { "lat": 38.7904948, "lon": -77.5411095 },
+      "tags": {
+        "addr:city": "Manassas",
+        "addr:housenumber": "7510",
+        "addr:postcode": "20109",
+        "addr:state": "VA",
+        "addr:street": "Mason King Court",
+        "building": "data_center",
+        "name": "Amazon IAD11",
+        "operator": "Amazon Web Services",
+        "operator:short": "AWS",
+        "operator:wikidata": "Q456157",
+        "ref": "Amazon IAD11",
+        "telecom": "data_center"
+      }
+    },
+    {
+      "type": "way",
+      "id": 46831933,
+      "center": { "lat": 38.7780614, "lon": -77.594905 },
+      "tags": {
+        "addr:city": "Bristow",
+        "addr:country": "US",
+        "addr:housenumber": "8217",
+        "addr:postcode": "20136",
+        "addr:state": "VA",
+        "addr:street": "Linton Hall Road",
+        "building": "data_center",
+        "name": "VA 4",
+        "operator": "Digital Realty",
+        "operator:wikidata": "Q5275969",
+        "telecom": "data_center"
+      }
+    },
+    {
+      "type": "way",
+      "id": 123456789,
+      "center": { "lat": 38.9001, "lon": -77.45 },
+      "tags": {
+        "building": "data_center",
+        "telecom": "data_center"
+      }
+    },
+    {
+      "type": "way",
+      "id": 987654321,
+      "center": { "lat": 60.1, "lon": -149.9 },
+      "tags": {
+        "addr:city": "Anchorage",
+        "name": "Alaska DC",
+        "operator": "SomeOperator",
+        "building": "data_center",
+        "telecom": "data_center"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 16282459,
+      "center": { "lat": 39.1402303, "lon": -76.6064303 },
+      "tags": {
+        "building": "yes",
+        "name": "CyberNAP Glen Burnie",
+        "operator": "AiNET",
+        "telecom": "data_center",
+        "type": "multipolygon"
+      }
+    },
+    {
+      "type": "way",
+      "id": 111111111,
+      "center": { "lat": 38.85, "lon": -77.3 },
+      "tags": {
+        "addr:city": "Ashburn",
+        "addr:state": "VA",
+        "name": "AWS Data Center",
+        "operator": "AWS",
+        "building": "data_center",
+        "telecom": "data_center"
+      }
+    },
+    {
+      "type": "way",
+      "id": 222222222,
+      "center": { "lat": 38.851, "lon": -77.301 },
+      "tags": {
+        "addr:city": "Ashburn",
+        "addr:state": "VA",
+        "name": "AWS Data Center Duplicate",
+        "operator": "AWS",
+        "building": "data_center",
+        "telecom": "data_center"
+      }
+    },
+    {
+      "type": "way",
+      "id": 333333333,
+      "center": { "lat": 38.7905, "lon": -77.5412 },
+      "tags": {
+        "addr:city": "Manassas",
+        "addr:state": "VA",
+        "name": "Amazon IAD11 Near Duplicate",
+        "operator": "Amazon Web Services",
+        "building": "data_center",
+        "telecom": "data_center"
+      }
+    },
+    {
+      "type": "way",
+      "id": 444444444,
+      "center": { "lat": 38.98, "lon": -77.42 },
+      "tags": {
+        "addr:city": "Sterling",
+        "addr:state": "VA",
+        "name": "MSFT Data Center",
+        "operator": "MSFT",
+        "building": "data_center",
+        "telecom": "data_center"
+      }
+    },
+    {
+      "type": "node",
+      "id": 555555555,
+      "lat": 38.9,
+      "lon": -77.4,
+      "tags": {
+        "addr:city": "Ashburn",
+        "name": "Node DC (should be skipped)",
+        "operator": "SomeOp",
+        "man_made": "data_center"
+      }
+    }
+  ]
+}
