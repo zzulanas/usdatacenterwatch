@@ -120,6 +120,17 @@ export const FacilityYamlSchema = z
     reported_wue: z.number().nonnegative().optional().nullable(),
     power_sources: PowerSourcesSchema.optional().nullable(),
 
+    // Disclosed actuals (operator sustainability reports) — these are
+    // calibration anchors, not model inputs. The modeling pipeline reads
+    // it_load_mw + design_pue to PRODUCE annual MWh; reported_annual_mwh
+    // is the operator's own number, used by scripts/validate-model.ts to
+    // verify the model rounds-trips to it within a tolerance. Storing both
+    // lets the methodology page show "modeled X vs disclosed Y" transparently.
+    reported_annual_mwh: z.number().positive().optional().nullable(),
+    reported_annual_mwh_year: z.number().int().min(1900).max(2100).optional().nullable(),
+    reported_annual_gallons: z.number().positive().optional().nullable(),
+    reported_annual_gallons_year: z.number().int().min(1900).max(2100).optional().nullable(),
+
     // Water
     water_source: WaterSourceSchema.optional().nullable(),
 
