@@ -16,7 +16,10 @@ status: 'operational'
 location:
   lng: -77.2418909
   lat: 37.4860655
-address: '6050 addr:city=Sandston addr:housenumber=6030 addr:postcode=23150 addr:state=VA addr:street=Technology Boulevard building=yes name=RIC2 DC1 telecom=data_center, Sandston, VA'
+# address omitted: OSM way/1493516625 has a corrupted addr:street where a
+# mapper concatenated raw tag key=value pairs as the street value. Location
+# is valid; address can be re-added when the OSM source is fixed upstream
+# or a curator confirms the real street address.
 city: 'Sandston'
 state: 'VA'
 confidence: 'low'
