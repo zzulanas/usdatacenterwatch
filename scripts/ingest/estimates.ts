@@ -74,7 +74,7 @@ export interface EstimateInputs {
   pue: number;
   pue_source: 'reported' | 'default_by_tenant_type';
   wue: number;
-  wue_source: 'reported' | 'default_by_cooling' | 'not_applicable';
+  wue_source: 'reported' | 'default_by_cooling' | 'default_air_fallback';
   utilization: number;
   climate_factor: number;
   it_load_mw: number;
@@ -127,9 +127,11 @@ export function computeEstimates(facility: FacilityYaml): FacilityEstimateResult
     wue = DEFAULT_WUE[facility.cooling_type];
     wue_source = 'default_by_cooling';
   } else {
-    // No cooling type — assume air (most conservative for water)
+    // No cooling type disclosed — fall back to air (the lowest-water assumption).
+    // Logged as `default_air_fallback` so the audit trail records both the
+    // fallback choice and that no cooling type was disclosed.
     wue = DEFAULT_WUE['air'];
-    wue_source = 'not_applicable';
+    wue_source = 'default_air_fallback';
   }
 
   const utilization = DEFAULT_UTILIZATION;

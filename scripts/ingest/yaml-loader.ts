@@ -47,7 +47,10 @@ export function loadYamlFiles(facilitiesDir: string, projectRoot: string): YamlF
     const source = readFileSync(filePath, 'utf-8');
     let raw: unknown;
     try {
-      raw = parseYaml(source);
+      // merge: false rejects YAML merge keys (<<: *anchor). Curated repo
+      // content doesn't use them; explicitly disabling prevents alias-bomb
+      // surface area if untrusted YAML ever lands in this dir (community PRs).
+      raw = parseYaml(source, { merge: false });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       throw new Error(`YAML parse error in ${filePath}: ${message}`);

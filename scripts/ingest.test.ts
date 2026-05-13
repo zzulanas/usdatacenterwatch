@@ -181,8 +181,8 @@ describe('computeEstimates — math', () => {
     if (!result) return;
 
     // Expected:
-    // kWh = 250 * 1000 * 0.6 * 1.10 * 8760 = 1_448_280_000 kWh/yr
-    // GWh = 1448.28 GWh/yr
+    // kWh = 250 * 1000 * 0.6 * 1.10 * 8760 = 1_445_400_000 kWh/yr
+    // GWh = 1445.4 GWh/yr
     const expectedKwh = 250 * 1000 * DEFAULT_UTILIZATION * 1.1 * 8760;
     const expectedGwh = expectedKwh / 1_000_000;
     expect(result.estimated_annual_gwh).toBeCloseTo(expectedGwh, 1);
@@ -191,7 +191,7 @@ describe('computeEstimates — math', () => {
 
     // Expected gallons:
     // wue for evap = 1.8 L/kWh (since no reported_wue)
-    // gal = 1448280000 * 1.8 * 1.0 * 0.264172 ≈ 688_553_520 gal
+    // gal = 1445400000 * 1.8 * 1.0 * 0.264172 ≈ 687_301_576 gal
     const expectedWue = DEFAULT_WUE['evap'];
     const expectedGal = expectedKwh * expectedWue * DEFAULT_CLIMATE_FACTOR * L_PER_KWH_TO_GAL;
     const tolerance = expectedGal * 0.001; // ±0.1%

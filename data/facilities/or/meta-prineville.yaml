@@ -17,12 +17,13 @@ it_load_mw: 250
 total_mw: 340
 design_pue: 1.10
 cooling_type: evap
-power_sources:
-  grid: 1.0
 water_source: well
 construction_capex_usd: 2000000000
 jobs_construction: 1500
-jobs_permanent: 200
+# Fields intentionally omitted because no public source asserts the value:
+#   jobs_permanent (Meta does not publish per-site headcount)
+#   power_sources (per-campus grid mix not disclosed)
+# These will be added when primary sources are located (USD-15+ subsidy/jobs pass).
 confidence: high
 last_verified: "2026-05-05"
 sources:
@@ -37,6 +38,7 @@ sources:
     supports:
       - jobs_construction
       - acres
+      - construction_capex_usd
   - url: https://www.oregonlive.com/silicon-forest/2011/01/facebook_brings_data_center_to.html
     accessed_at: "2026-05-05"
     supports:
