@@ -10,8 +10,8 @@
 #   fips (leave null; a future curation pass fills this in via Census Geocoder)
 slug: "databank-plano-data-center-plano-tx"
 name: "DataBank Plano Data Center"
-operator: "DataBank Plano Data Center"
-tenant_type: "enterprise"
+operator: "DataBank"
+tenant_type: "colo"
 status: "operational"
 location:
   lng: -96.8152181

@@ -10,8 +10,8 @@
 #   fips (leave null; a future curation pass fills this in via Census Geocoder)
 slug: "cyrusone-phx7-chandler-az"
 name: "CyrusOne PHX7"
-operator: "CyrusOne PHX7"
-tenant_type: "enterprise"
+operator: "CyrusOne"
+tenant_type: "colo"
 status: "operational"
 location:
   lng: -111.8818937

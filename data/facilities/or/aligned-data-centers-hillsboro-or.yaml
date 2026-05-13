@@ -10,8 +10,8 @@
 #   fips (leave null; a future curation pass fills this in via Census Geocoder)
 slug: "aligned-data-centers-hillsboro-or"
 name: "Aligned DC - PDX-01"
-operator: "Aligned Data Centers"
-tenant_type: "enterprise"
+operator: "Aligned"
+tenant_type: "colo"
 status: "operational"
 location:
   lng: -122.9492507

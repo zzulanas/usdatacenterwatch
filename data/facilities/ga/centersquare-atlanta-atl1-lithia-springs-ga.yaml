@@ -10,8 +10,8 @@
 #   fips (leave null; a future curation pass fills this in via Census Geocoder)
 slug: "centersquare-atlanta-atl1-lithia-springs-ga"
 name: "Centersquare Atlanta ATL1"
-operator: "Centersquare Atlanta ATL1"
-tenant_type: "enterprise"
+operator: "Centersquare"
+tenant_type: "colo"
 status: "operational"
 location:
   lng: -84.5812119

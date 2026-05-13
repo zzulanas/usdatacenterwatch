@@ -11,7 +11,7 @@
 slug: "h5-data-centers-san-antonio-tx"
 name: "H5 Data Centers San Antonio"
 operator: "H5 Data Centers"
-tenant_type: "enterprise"
+tenant_type: "colo"
 status: "operational"
 location:
   lng: -98.4869057

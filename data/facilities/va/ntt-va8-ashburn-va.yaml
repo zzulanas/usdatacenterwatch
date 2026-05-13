@@ -8,21 +8,25 @@
 #   water_source, construction_capex_usd, jobs_construction, jobs_permanent
 #   reported_annual_mwh, reported_annual_gallons, power_sources, subsidies
 #   fips (leave null; a future curation pass fills this in via Census Geocoder)
-slug: "digital-realty-ashburn-md"
-name: "Digital Realty Northern Virginia IAD36"
-operator: "Digital Realty"
+# Note: OSM way 1188691868 was tagged `addr:state: MD` but Ashburn is in
+# Loudoun County, Virginia. Slug uses the VA8 site code to disambiguate
+# from the curated `ntt-ashburn-va` record (different building on the same
+# NTT Ashburn campus).
+slug: "ntt-va8-ashburn-va"
+name: "NTT Ashburn VA8 Data Centre"
+operator: "NTT"
 tenant_type: "colo"
 status: "operational"
 location:
-  lng: -77.4793749
-  lat: 39.0015493
-address: "43780 Digital Loudoun Plaza, Ashburn"
+  lng: -77.475509
+  lat: 39.0201893
+address: "44710 Gigabit Plaza, Ashburn, VA"
 city: "Ashburn"
-state: "MD"
+state: "VA"
 confidence: "low"
 last_verified: "2026-05-13"
 sources:
-  - url: "https://www.openstreetmap.org/way/597970806"
+  - url: "https://www.openstreetmap.org/way/1188691868"
     accessed_at: "2026-05-13"
     supports:
       - "location"

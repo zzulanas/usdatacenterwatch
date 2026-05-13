@@ -10,8 +10,8 @@
 #   fips (leave null; a future curation pass fills this in via Census Geocoder)
 slug: "coresite-bo1-somerville-ma"
 name: "CoreSite BO1"
-operator: "CoreSite BO1"
-tenant_type: "enterprise"
+operator: "CoreSite"
+tenant_type: "colo"
 status: "operational"
 location:
   lng: -71.0797577

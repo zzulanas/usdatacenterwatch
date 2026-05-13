@@ -10,8 +10,8 @@
 #   fips (leave null; a future curation pass fills this in via Census Geocoder)
 slug: "digital-realty-austin-aus11-austin-tx"
 name: "Digital Realty Austin AUS11"
-operator: "Digital Realty Austin AUS11"
-tenant_type: "enterprise"
+operator: "Digital Realty"
+tenant_type: "colo"
 status: "operational"
 location:
   lng: -97.6957555

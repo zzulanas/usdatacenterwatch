@@ -10,8 +10,8 @@
 #   fips (leave null; a future curation pass fills this in via Census Geocoder)
 slug: "aligned-energy-data-center-phoenix-az"
 name: "Aligned Energy Data Center"
-operator: "Aligned Energy Data Center"
-tenant_type: "enterprise"
+operator: "Aligned"
+tenant_type: "colo"
 status: "operational"
 location:
   lng: -112.1111595

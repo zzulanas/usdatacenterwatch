@@ -143,6 +143,29 @@ export const OPERATOR_ALIASES: Record<string, string> = {
   // National-pilot additions (verified from OSM data, 2026-05-13):
   // "Vantage" is OSM shorthand for Vantage Data Centers (colo; multiple US markets)
   Vantage: 'Vantage Data Centers',
+  // National-pilot name-fallback aliases. OSM mappers commonly include the
+  // facility site code or campus suffix in the operator name when the
+  // `operator` tag is absent ("Aligned Data Centers, LLC"; "Digital Realty
+  // Austin AUS11"). These map back to the canonical company so the
+  // HYPERSCALERS/COLOS lookup succeeds in `deriveTenantType`.
+  'Apple Inc.': 'Apple',
+  'Google LLC': 'Google',
+  'Aligned Data Centers': 'Aligned',
+  'Aligned Data Centers, LLC': 'Aligned',
+  'Aligned Energy Data Center': 'Aligned',
+  'LightEdge Austin II': 'LightEdge',
+  'Lightedge Des Moines 2': 'LightEdge',
+  'DataBank Plano Data Center': 'DataBank',
+  'DataBank Pittsburgh PIT2': 'DataBank',
+  'TierPoint Sioux Falls West Data Center': 'TierPoint',
+  'Digital Realty Austin AUS11': 'Digital Realty',
+  'CoreSite BO1': 'CoreSite',
+  'T5 Data Centers': 'T5',
+  'T5 Data Center': 'T5',
+  'Centersquare Atlanta ATL1': 'Centersquare',
+  'CyrusOne PHX7': 'CyrusOne',
+  'H5 Data Centers': 'H5 Data Centers',
+  'H5 Data Center': 'H5 Data Centers',
 };
 
 // Known hyperscaler operators (post-alias-normalization)
@@ -198,6 +221,10 @@ const COLOS = new Set([
   // hardcoded in that file instead of being driven by this set (the COLOS
   // set is for operator company names only).
   'SV Colo', // Santa Clara colo
+  // National-pilot additions (verified from OSM data, 2026-05-13):
+  'H5 Data Centers', // colo / wholesale; multiple US markets
+  'OVHcloud', // French colo+cloud with US presence (Beauharnois→Hillsboro etc.)
+  'zColo by Zayo', // Zayo's colocation brand
 ]);
 
 // OSM names that imply a single building within a larger campus.

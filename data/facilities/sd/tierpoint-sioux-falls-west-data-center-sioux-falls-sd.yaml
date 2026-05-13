@@ -10,8 +10,8 @@
 #   fips (leave null; a future curation pass fills this in via Census Geocoder)
 slug: "tierpoint-sioux-falls-west-data-center-sioux-falls-sd"
 name: "TierPoint Sioux Falls West Data Center"
-operator: "TierPoint Sioux Falls West Data Center"
-tenant_type: "enterprise"
+operator: "TierPoint"
+tenant_type: "colo"
 status: "operational"
 location:
   lng: -96.8091949

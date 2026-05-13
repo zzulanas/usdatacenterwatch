@@ -10,8 +10,8 @@
 #   fips (leave null; a future curation pass fills this in via Census Geocoder)
 slug: "apple-inc-mesa-az"
 name: "Apple Data Center"
-operator: "Apple Inc."
-tenant_type: "enterprise"
+operator: "Apple"
+tenant_type: "hyperscaler"
 status: "operational"
 location:
   lng: -111.6041418

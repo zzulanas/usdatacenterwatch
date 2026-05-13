@@ -10,8 +10,8 @@
 #   fips (leave null; a future curation pass fills this in via Census Geocoder)
 slug: "h5-data-center-cleveland-oh"
 name: "H5 Data Center"
-operator: "H5 Data Center"
-tenant_type: "enterprise"
+operator: "H5 Data Centers"
+tenant_type: "colo"
 status: "operational"
 location:
   lng: -81.683589

@@ -10,8 +10,8 @@
 #   fips (leave null; a future curation pass fills this in via Census Geocoder)
 slug: "t5-data-center-alpharetta-ga"
 name: "T5 Data Center"
-operator: "T5 Data Center"
-tenant_type: "enterprise"
+operator: "T5"
+tenant_type: "colo"
 status: "operational"
 location:
   lng: -84.264267

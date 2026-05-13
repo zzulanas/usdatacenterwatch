@@ -8,7 +8,11 @@
 #   water_source, construction_capex_usd, jobs_construction, jobs_permanent
 #   reported_annual_mwh, reported_annual_gallons, power_sources, subsidies
 #   fips (leave null; a future curation pass fills this in via Census Geocoder)
-slug: "coresite-reston-md"
+# Note: OSM way 79818498 was tagged `addr:state: MD` but Reston is in
+# Fairfax County, Virginia. Slug uses the VA3 site code to disambiguate
+# from the curated `coresite-reston-va` record (different building on the
+# same CoreSite campus).
+slug: "coresite-va3-reston-va"
 name: "CoreSite Reston VA3"
 operator: "CoreSite"
 tenant_type: "colo"
@@ -16,9 +20,9 @@ status: "operational"
 location:
   lng: -77.3724298
   lat: 38.9483343
-address: "12369 Sunrise Valley Drive, Reston"
+address: "12369 Sunrise Valley Drive, Reston, VA"
 city: "Reston"
-state: "MD"
+state: "VA"
 confidence: "low"
 last_verified: "2026-05-13"
 sources:

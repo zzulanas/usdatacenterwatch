@@ -10,8 +10,8 @@
 #   fips (leave null; a future curation pass fills this in via Census Geocoder)
 slug: "lightedge-des-moines-2-altoona-ia"
 name: "Lightedge Des Moines 2"
-operator: "Lightedge Des Moines 2"
-tenant_type: "enterprise"
+operator: "LightEdge"
+tenant_type: "colo"
 status: "operational"
 location:
   lng: -93.4559432

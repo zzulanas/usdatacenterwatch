@@ -10,8 +10,8 @@
 #   fips (leave null; a future curation pass fills this in via Census Geocoder)
 slug: "t5-data-centers-elk-grove-village-il"
 name: "T5 Chicago II"
-operator: "T5 Data Centers"
-tenant_type: "enterprise"
+operator: "T5"
+tenant_type: "colo"
 status: "operational"
 location:
   lng: -87.9755567

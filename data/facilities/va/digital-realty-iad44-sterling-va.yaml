@@ -8,21 +8,25 @@
 #   water_source, construction_capex_usd, jobs_construction, jobs_permanent
 #   reported_annual_mwh, reported_annual_gallons, power_sources, subsidies
 #   fips (leave null; a future curation pass fills this in via Census Geocoder)
-slug: "ntt-ashburn-md"
-name: "NTT Ashburn VA8 Data Centre"
-operator: "NTT"
+# Note: OSM way 1317733642 was tagged `addr:state: MD` but Sterling is in
+# Loudoun County, Virginia. Slug uses the IAD44 site code to disambiguate
+# from the curated `digital-realty-sterling-va` record (different building
+# on the same Digital Realty campus).
+slug: "digital-realty-iad44-sterling-va"
+name: "Digital Realty Northern Virginia IAD44"
+operator: "Digital Realty"
 tenant_type: "colo"
 status: "operational"
 location:
-  lng: -77.475509
-  lat: 39.0201893
-address: "44710 Gigabit Plaza, Ashburn"
-city: "Ashburn"
-state: "MD"
+  lng: -77.4913983
+  lat: 38.9608537
+address: "43704 Efficiency Drive, Sterling, VA"
+city: "Sterling"
+state: "VA"
 confidence: "low"
 last_verified: "2026-05-13"
 sources:
-  - url: "https://www.openstreetmap.org/way/1188691868"
+  - url: "https://www.openstreetmap.org/way/1317733642"
     accessed_at: "2026-05-13"
     supports:
       - "location"

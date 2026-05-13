@@ -10,8 +10,8 @@
 #   fips (leave null; a future curation pass fills this in via Census Geocoder)
 slug: "databank-pittsburgh-pit2-pittsburgh-pa"
 name: "DataBank Pittsburgh PIT2"
-operator: "DataBank Pittsburgh PIT2"
-tenant_type: "enterprise"
+operator: "DataBank"
+tenant_type: "colo"
 status: "operational"
 location:
   lng: -80.1901663

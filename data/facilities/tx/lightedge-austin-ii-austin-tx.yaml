@@ -10,8 +10,8 @@
 #   fips (leave null; a future curation pass fills this in via Census Geocoder)
 slug: "lightedge-austin-ii-austin-tx"
 name: "LightEdge Austin II"
-operator: "LightEdge Austin II"
-tenant_type: "enterprise"
+operator: "LightEdge"
+tenant_type: "colo"
 status: "operational"
 location:
   lng: -97.707046

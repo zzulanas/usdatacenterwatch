@@ -10,8 +10,8 @@
 #   fips (leave null; a future curation pass fills this in via Census Geocoder)
 slug: "google-llc-clarksville-tn"
 name: "Google Montgomery Data Center"
-operator: "Google LLC"
-tenant_type: "enterprise"
+operator: "Google"
+tenant_type: "hyperscaler"
 status: "operational"
 location:
   lng: -87.2601021

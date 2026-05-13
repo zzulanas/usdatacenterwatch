@@ -11,7 +11,7 @@
 slug: "ovhcloud-hillsboro-or"
 name: "OVHcloud - Hillsboro"
 operator: "OVHcloud"
-tenant_type: "enterprise"
+tenant_type: "colo"
 status: "operational"
 location:
   lng: -122.9558975
