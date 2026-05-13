@@ -132,6 +132,14 @@ export const OPERATOR_ALIASES: Record<string, string> = {
   // CoreSite legal entity names map to canonical brand
   'CoreSite Real Estate 1656 McCarthy, L.P.': 'CoreSite',
   Coresite: 'CoreSite',
+  // Name-fallback aliases: when OSM has no `operator` tag the script uses
+  // `name` as the operator. These map common name-as-operator patterns to
+  // the canonical company so tenant_type lookup succeeds.
+  'LightEdge SAN1': 'LightEdge',
+  'NTT Limited': 'NTT',
+  'American Telephone & Telegraph': 'AT&T',
+  'PG&E Datacenter': 'PG&E',
+  'Dell 350 Holger Way': 'Dell',
 };
 
 // Known hyperscaler operators (post-alias-normalization)
@@ -180,7 +188,12 @@ const COLOS = new Set([
   'OpenColo', // Santa Clara colo operator
   'LightEdge', // colo with multiple US locations; SAN1 campus in San Diego
   'TPx Communications', // SoCal colo operator (formerly TelePacific)
-  'One Wilshire', // landmark LA carrier hotel / colocation exchange
+  // NOTE: One Wilshire (624 S. Grand Ave LA) is a CARRIER-HOTEL BUILDING,
+  // not an operator company — many independent colos rent space there. We
+  // keep the YAML record because the building itself is the most important
+  // carrier interconnect on the US West Coast, but `tenant_type: colo` is
+  // hardcoded in that file instead of being driven by this set (the COLOS
+  // set is for operator company names only).
   'SV Colo', // Santa Clara colo
 ]);
 

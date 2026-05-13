@@ -10,8 +10,8 @@
 #   fips (leave null; a future curation pass fills this in via Census Geocoder)
 slug: "ntt-limited-san-jose-ca"
 name: "NTT Limited Data Center"
-operator: "NTT Limited"
-tenant_type: "enterprise"
+operator: "NTT"
+tenant_type: "colo"
 status: "operational"
 location:
   lng: -121.8892308

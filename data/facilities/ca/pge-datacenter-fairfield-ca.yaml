@@ -10,7 +10,7 @@
 #   fips (leave null; a future curation pass fills this in via Census Geocoder)
 slug: "pge-datacenter-fairfield-ca"
 name: "PG&E Datacenter"
-operator: "PG&E Datacenter"
+operator: "PG&E"
 tenant_type: "enterprise"
 status: "operational"
 location:

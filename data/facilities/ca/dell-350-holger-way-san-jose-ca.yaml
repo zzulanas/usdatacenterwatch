@@ -10,7 +10,7 @@
 #   fips (leave null; a future curation pass fills this in via Census Geocoder)
 slug: "dell-350-holger-way-san-jose-ca"
 name: "Dell 350 Holger Way"
-operator: "Dell 350 Holger Way"
+operator: "Dell"
 tenant_type: "enterprise"
 status: "operational"
 location:
