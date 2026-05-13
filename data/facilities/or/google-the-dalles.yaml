@@ -6,7 +6,6 @@ status: operational
 location:
   lng: -121.2010
   lat: 45.6336
-address: 4200 Columbia Rd, The Dalles, OR 97058
 city: The Dalles
 county: Wasco
 state: OR
@@ -19,6 +18,9 @@ construction_capex_usd: 1800000000
 # Fields intentionally omitted because no public source asserts the value:
 #   it_load_mw, total_mw, design_pue (Google does not publish per-site IT load)
 #   acres (built on a former aluminum smelter site; published acreage not found)
+#   address (the commonly cited "4200 Columbia Rd" was not traced to a primary
+#     source during curation — add when a Wasco County parcel citation can be
+#     attached)
 #   jobs_construction, jobs_permanent (per-site headcount not disclosed)
 #   power_sources (Google has 100% global renewable matching but per-site grid
 #     mix is not broken out)

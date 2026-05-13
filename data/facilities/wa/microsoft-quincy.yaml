@@ -25,7 +25,7 @@ year_built: 2007
 confidence: medium
 last_verified: "2026-05-13"
 sources:
-  - url: https://en.wikipedia.org/wiki/Columbia_Data_Center
+  - url: https://www.datacenterdynamics.com/en/analysis/inside-microsofts-quincy-data-center/
     accessed_at: "2026-05-13"
     supports:
       - name
@@ -34,14 +34,14 @@ sources:
       - state
       - year_built
       - sqft
-  - url: https://www.datacenterdynamics.com/en/analysis/inside-microsofts-quincy-data-center/
-    accessed_at: "2026-05-13"
-    supports:
-      - year_built
-      - sqft
-      - operator
   - url: https://www.datacenterknowledge.com/hyperscalers/generator-permit-indicates-microsoft-plans-big-quincy-data-center-expansion
     accessed_at: "2026-05-13"
     supports:
       - acres
       - operator
+      - year_built
+  - url: https://en.wikipedia.org/wiki/Columbia_Data_Center
+    accessed_at: "2026-05-13"
+    supports:
+      - name
+      - sqft
