@@ -13,17 +13,17 @@ fips: "37035"
 acres: 465
 sqft: 1000000
 year_built: 2010
-# it_load_mw is derived. DCD reported Apple's Maiden NC data center used
-# 453,000,000 kWh (453 GWh) of electricity in 2023. Back-calculated with
-# Apple's published global average PUE (~1.06) and default utilization 0.6:
-#   ~81 MW = 453,000 MWh / 8760 / 1.06 / 0.6
-# Rounded to 80 MW. This is consistent with older DCK reporting describing
-# the site as drawing "about 40 MW at full capacity" historically, which
-# reflected the original single building rather than the current 6-building
-# campus. Confidence: medium because PUE is global-average not site-specific,
-# and the back-derivation depends on assumed utilization.
+# it_load_mw is derived from reported_annual_mwh below using Apple's
+# published global-average PUE (1.06) and default utilization 0.6:
+#   ~81 MW = 453,000 / 8760 / 1.06 / 0.6  → rounded to 80
+# Consistent with older DCK reporting ("about 40 MW at full capacity")
+# which described the original single building before the campus grew
+# to 6 buildings. scripts/validate-model.ts round-trips this.
 it_load_mw: 80
 design_pue: 1.06
+# DCD reported Apple's Maiden NC data center used 453,000,000 kWh
+# (453 GWh) of electricity in 2023. Calibration anchor.
+reported_annual_mwh: 453000
 construction_capex_usd: 4000000000
 # Fields intentionally omitted because no public source asserts the value:
 #   total_mw (Apple does not publish per-site nameplate capacity)

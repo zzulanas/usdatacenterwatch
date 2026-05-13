@@ -12,15 +12,15 @@ state: NC
 fips: "37161"
 sqft: 1300000
 year_built: 2012
-# it_load_mw is derived. Meta's Forest City info-sheet discloses 492,786 MWh
-# of annual electricity consumption at the campus. Back-calculated with
-# Meta's published design PUE (1.10) and default utilization (0.6):
-#   85 MW = 492,786 MWh / 8760 / 1.10 / 0.6
-# This round-trips through estimates.ts to reproduce the disclosed annual
-# MWh within rounding error. Confidence: medium (depends on assumed
-# utilization; Meta does not publish the per-site utilization).
+# it_load_mw is derived from reported_annual_mwh below using PUE 1.10
+# (Meta's published design PUE) and the modeling pipeline's default
+# utilization 0.6:  85 MW = 492,786 / 8760 / 1.10 / 0.6
+# scripts/validate-model.ts round-trips this against the disclosed MWh.
 it_load_mw: 85
 design_pue: 1.10
+# Meta's Forest City info-sheet discloses 492,786 MWh of annual
+# electricity. Calibration anchor.
+reported_annual_mwh: 492786
 # construction_capex_usd here is Meta's disclosed cumulative investment in the
 # Forest City campus over ~14 years (NOT a single-build capex). Treated as the
 # best available capital-investment number per the info-sheet language.

@@ -13,18 +13,17 @@ fips: "19153"
 acres: 520
 sqft: 5000000
 year_built: 2014
-# it_load_mw is derived, not directly published. Meta's 2024 sustainability
-# report disclosed 1,243,306 MWh of annual electricity consumption at the
-# Altoona campus (the second-largest among Meta's owned facilities, per DCD).
-# Back-calculated with the modeling pipeline's default assumptions
-# (PUE 1.10, utilization 0.6, 8760 hr/yr):
+# it_load_mw is derived from reported_annual_mwh below using the modeling
+# pipeline's default assumptions (PUE 1.10, utilization 0.6, 8760 hr/yr):
 #   215 MW = 1,243,306 MWh / 8760 / 1.10 / 0.6
-# Round-trip property: feeding this number through estimates.ts reproduces
-# the disclosed 1.24 TWh/yr exactly. Confidence: medium because the
-# derivation depends on assumed PUE and utilization; if Meta publishes a
-# different effective PUE for this site, the derivation shifts.
+# Round-trip: feeding it_load_mw=215 through estimates.ts reproduces the
+# disclosed 1.24 TWh/yr exactly. scripts/validate-model.ts asserts this.
 it_load_mw: 215
 design_pue: 1.10
+# Meta's 2024 sustainability report disclosed annual electricity for this
+# campus (second-largest among Meta's owned facilities). Used as a
+# calibration anchor for the model — not a model input.
+reported_annual_mwh: 1243306
 construction_capex_usd: 2500000000
 jobs_permanent: 400
 # Fields intentionally omitted because no public source asserts the value:

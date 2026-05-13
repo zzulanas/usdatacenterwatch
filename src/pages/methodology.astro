@@ -1,15 +1,261 @@
 ---
+import yaml from 'yaml';
 import Layout from '@/components/Layout.astro';
+import { FacilityYamlSchema } from '@/lib/zod-facility-schema';
+import {
+  computeEstimates,
+  DEFAULT_PUE,
+  DEFAULT_WUE,
+  DEFAULT_UTILIZATION,
+  METHODOLOGY_VERSION,
+  UNCERTAINTY,
+} from '../../scripts/ingest/estimates.ts';
+
+// Read curated YAMLs at build time. `?raw` returns each file as a string so
+// Vite doesn't try to parse YAML as JS; `eager: true` resolves the imports
+// inline so the frontmatter sees the contents synchronously.
+const facilityYamlFiles = import.meta.glob('/data/facilities/*/*.yaml', {
+  eager: true,
+  query: '?raw',
+  import: 'default',
+}) as Record<string, string>;
+
+const facilities = Object.values(facilityYamlFiles)
+  .map((raw) => FacilityYamlSchema.safeParse(yaml.parse(raw)))
+  .filter((r): r is { success: true; data: ReturnType<typeof FacilityYamlSchema.parse> } => r.success)
+  .map((r) => r.data);
+
+// Build the calibration table: facilities with reported_annual_mwh disclosures
+const calibration = facilities
+  .filter((f) => f.reported_annual_mwh != null)
+  .map((f) => {
+    const est = computeEstimates(f);
+    if (!est) return null;
+    const modeledMwh = est.estimated_annual_gwh * 1000;
+    const reportedMwh = f.reported_annual_mwh!;
+    const variancePct = ((modeledMwh - reportedMwh) / reportedMwh) * 100;
+    return {
+      slug: f.slug,
+      name: f.name,
+      operator: f.operator,
+      reportedMwh,
+      modeledMwh,
+      variancePct,
+    };
+  })
+  .filter((r): r is NonNullable<typeof r> => r != null)
+  .sort((a, b) => b.reportedMwh - a.reportedMwh);
+
+const facilitiesWithModeledEstimates = facilities.filter((f) => f.it_load_mw != null).length;
+const facilitiesTotal = facilities.length;
+
+const fmt = (n: number, d = 0) =>
+  n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
 ---
 
 <Layout title="Methodology — US Data Center Watch">
-  <div class="max-w-3xl mx-auto px-4 py-12">
+  <div class="max-w-3xl mx-auto px-4 py-12 text-neutral-200">
     <h1 class="text-2xl font-semibold text-neutral-100">Methodology</h1>
-    <p class="mt-4 text-neutral-400 text-sm">
-      Full methodology documentation coming soon. See <a
-        href="https://github.com/zzulanas/usdatacenterwatch/blob/main/DESIGN.md"
-        class="underline hover:text-neutral-100">DESIGN.md</a
-      > for the current modeling approach.
+    <p class="mt-2 text-sm text-neutral-500 font-mono">version {METHODOLOGY_VERSION}</p>
+
+    <section class="mt-8 space-y-3 text-sm leading-relaxed">
+      <h2 class="text-lg font-semibold text-neutral-100">What we model</h2>
+      <p>
+        For each data center we publish a modeled annual electricity consumption (GWh/yr) and
+        annual water withdrawal (US gallons/yr). The model is intentionally simple — a
+        deterministic function of facility IT load, PUE, water-use effectiveness (WUE), and
+        utilization. We chose simplicity over apparent precision because hyperscale operators
+        do not publish the inputs a more complex model would need.
+      </p>
+    </section>
+
+    <section class="mt-8 space-y-3 text-sm leading-relaxed">
+      <h2 class="text-lg font-semibold text-neutral-100">Formula</h2>
+      <pre
+        class="bg-neutral-900 border border-neutral-800 rounded-md p-4 text-xs overflow-x-auto"><code>kwh_per_year = it_load_mw × 1000 × utilization × pue × 8760
+gwh_per_year = kwh_per_year / 1,000,000
+
+gallons_per_year = kwh_per_year × wue × climate_factor × 0.264172  # L→US gal</code></pre>
+      <ul class="list-disc list-inside space-y-1 text-neutral-300 marker:text-neutral-500">
+        <li>
+          <code class="text-neutral-100">it_load_mw</code> — IT-load capacity in megawatts. Sourced
+          from operator disclosure where possible; back-derived from disclosed annual MWh
+          when the operator publishes that but not capacity (see Calibration below).
+        </li>
+        <li>
+          <code class="text-neutral-100">pue</code> — Power Usage Effectiveness. Use the operator's
+          <code>design_pue</code> when published; otherwise the tenant-type default below.
+        </li>
+        <li>
+          <code class="text-neutral-100">utilization</code> — Fraction of peak IT load actually drawn,
+          fleet-averaged. Default <code>{DEFAULT_UTILIZATION}</code>.
+        </li>
+        <li>
+          <code class="text-neutral-100">wue</code> — Water Use Effectiveness, L/kWh. Use the
+          operator's <code>reported_wue</code> when published; otherwise the cooling-type default
+          below.
+        </li>
+        <li>
+          <code class="text-neutral-100">climate_factor</code> — Multiplier on evaporative WUE for
+          local wet-bulb temperature. Currently <code>1.0</code> for all facilities. NOAA/PRISM
+          integration is a tracked follow-up.
+        </li>
+      </ul>
+    </section>
+
+    <section class="mt-8 space-y-3 text-sm leading-relaxed">
+      <h2 class="text-lg font-semibold text-neutral-100">Default assumptions</h2>
+      <p>
+        When an operator does not publish a value, we fall back to these tenant-type or
+        cooling-type defaults. They are intentionally conservative and round-number where
+        possible so the source of any displayed estimate is easy to audit.
+      </p>
+      <div class="grid grid-cols-2 gap-6 mt-3">
+        <div>
+          <h3 class="text-xs font-mono text-neutral-500 uppercase">Default PUE</h3>
+          <table class="mt-2 text-sm w-full">
+            <tbody>
+              {
+                Object.entries(DEFAULT_PUE).map(([k, v]) => (
+                  <tr class="border-b border-neutral-800 last:border-b-0">
+                    <td class="py-1 text-neutral-400">{k}</td>
+                    <td class="py-1 text-right text-neutral-100 font-mono">{v}</td>
+                  </tr>
+                ))
+              }
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <h3 class="text-xs font-mono text-neutral-500 uppercase">Default WUE (L/kWh)</h3>
+          <table class="mt-2 text-sm w-full">
+            <tbody>
+              {
+                Object.entries(DEFAULT_WUE).map(([k, v]) => (
+                  <tr class="border-b border-neutral-800 last:border-b-0">
+                    <td class="py-1 text-neutral-400">{k}</td>
+                    <td class="py-1 text-right text-neutral-100 font-mono">{v}</td>
+                  </tr>
+                ))
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="mt-8 space-y-3 text-sm leading-relaxed">
+      <h2 class="text-lg font-semibold text-neutral-100">Uncertainty bands</h2>
+      <p>
+        Every facility carries a <code>confidence</code> label that drives the displayed
+        uncertainty band on its modeled values:
+      </p>
+      <table class="mt-2 text-sm">
+        <thead class="text-xs font-mono text-neutral-500 uppercase">
+          <tr>
+            <th class="text-left py-1 pr-4">Confidence</th>
+            <th class="text-right py-1">Band (± of central)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            Object.entries(UNCERTAINTY).map(([k, v]) => (
+              <tr class="border-b border-neutral-800 last:border-b-0">
+                <td class="py-1 pr-4 text-neutral-400">{k}</td>
+                <td class="py-1 text-right text-neutral-100 font-mono">±{Math.round(v * 100)}%</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </section>
+
+    <section class="mt-8 space-y-3 text-sm leading-relaxed">
+      <h2 class="text-lg font-semibold text-neutral-100">
+        Calibration vs operator disclosures
+      </h2>
+      <p>
+        We tune the model's defaults so that the modeled annual MWh round-trips to operator-
+        disclosed annual MWh for every facility where the operator publishes both. The table
+        below is regenerated on every build from <code>data/facilities/</code> and gated in CI
+        — any facility outside ±5% blocks merges.
+      </p>
+      <table class="mt-3 w-full text-sm">
+        <thead class="text-xs font-mono text-neutral-500 uppercase">
+          <tr class="border-b border-neutral-800">
+            <th class="text-left py-2 pr-3">Facility</th>
+            <th class="text-right py-2 pr-3">Reported MWh/yr</th>
+            <th class="text-right py-2 pr-3">Modeled MWh/yr</th>
+            <th class="text-right py-2">Variance</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            calibration.map((row) => (
+              <tr class="border-b border-neutral-800 last:border-b-0">
+                <td class="py-2 pr-3">
+                  <span class="text-neutral-100">{row.name}</span>
+                  <span class="text-neutral-500"> · {row.operator}</span>
+                </td>
+                <td class="py-2 pr-3 text-right text-neutral-100 font-mono">
+                  {fmt(row.reportedMwh)}
+                </td>
+                <td class="py-2 pr-3 text-right text-neutral-100 font-mono">
+                  {fmt(Math.round(row.modeledMwh))}
+                </td>
+                <td
+                  class={`py-2 text-right font-mono ${Math.abs(row.variancePct) <= 5 ? 'text-emerald-400' : 'text-amber-400'}`}
+                >
+                  {row.variancePct > 0 ? '+' : ''}
+                  {row.variancePct.toFixed(2)}%
+                </td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+      <p class="text-xs text-neutral-500 mt-2">
+        {calibration.length} of {facilitiesTotal} facilities currently carry an operator-
+        disclosed annual MWh figure. {facilitiesWithModeledEstimates} have a sufficient
+        <code>it_load_mw</code> to compute an estimate (the others render on the map but
+        without a modeled energy/water number until a load value is sourced).
+      </p>
+    </section>
+
+    <section class="mt-8 space-y-3 text-sm leading-relaxed">
+      <h2 class="text-lg font-semibold text-neutral-100">Where this falls short</h2>
+      <ul class="list-disc list-inside space-y-1 text-neutral-300 marker:text-neutral-500">
+        <li>
+          <b>Utilization is fleet-averaged, not site-specific.</b> Some campuses run closer to
+          80% utilization on AI training workloads; others coast at 40%.
+        </li>
+        <li>
+          <b>Climate factor is uniform.</b> A facility in Phoenix and a facility in Quincy with
+          the same nominal WUE will produce different actual water consumption — our model
+          currently treats them the same.
+        </li>
+        <li>
+          <b>Backup-generator and on-site solar capacity ≠ IT load.</b> We exclude both from
+          load calculations even when they're widely reported.
+        </li>
+      </ul>
+    </section>
+
+    <p class="mt-10 text-xs text-neutral-500">
+      Source: <a
+        href="https://github.com/zzulanas/usdatacenterwatch/blob/main/scripts/ingest/estimates.ts"
+        class="underline hover:text-neutral-100">scripts/ingest/estimates.ts</a
+      >
+      ·
+      <a
+        href="https://github.com/zzulanas/usdatacenterwatch/blob/main/data/facilities/README.md"
+        class="underline hover:text-neutral-100">curation guide</a
+      >
+      ·
+      <a
+        href="https://github.com/zzulanas/usdatacenterwatch/blob/main/scripts/validate-model.ts"
+        class="underline hover:text-neutral-100">validate-model.ts</a
+      >
     </p>
   </div>
 </Layout>
