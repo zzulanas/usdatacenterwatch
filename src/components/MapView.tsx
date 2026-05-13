@@ -23,21 +23,43 @@ const US_BOUNDS: [[number, number], [number, number]] = [
 const ACCENT_RGBA: [number, number, number, number] = [79, 209, 197, 179]; // ~0.7 opacity
 const ACCENT_STROKE: [number, number, number, number] = [79, 209, 197, 230];
 
-function buildTooltip(info: PickingInfo): { html: string; style: object } | null {
+/**
+ * Touch-vs-pointer affordance split:
+ *
+ * The deck.gl tooltip is hover-only on desktop and auto-dismisses when the
+ * cursor leaves the picked object. That makes any <a> tag inside unreachable
+ * with a mouse — so on pointer devices the tooltip shows informational text
+ * and the dot's onClick handler opens the source URL.
+ *
+ * On touch devices there is no hover: a tap shows the tooltip AND the tooltip
+ * stays "pinned" until the next tap moves the pick off the object. That makes
+ * a live <a> link inside the tooltip the better UX (the dot's onClick would
+ * yank the user straight to the source before they read what they tapped).
+ *
+ * We pick once per session by sniffing CSS hover capability + touch presence.
+ */
+function isTouchDevice(): boolean {
+  if (typeof window === 'undefined') return false;
+  const hoverNone = window.matchMedia?.('(hover: none)').matches ?? false;
+  const hasTouch = 'ontouchstart' in window || (navigator.maxTouchPoints ?? 0) > 0;
+  return hoverNone || hasTouch;
+}
+
+function buildTooltip(info: PickingInfo, isTouch: boolean): { html: string; style: object } | null {
   if (!info.object) return null;
   const f = info.object as Facility;
-  // The deck.gl tooltip is hover-only and auto-dismisses when the cursor
-  // leaves the dot — the anchor below is unreachable. Until USD-22 ships
-  // a proper side panel, clicking the dot itself opens the source URL.
-  // The "Click for source" wording is the affordance hint; the actual
-  // navigation happens via the layer's onClick handler.
+  const sourceLine = f.source_url
+    ? isTouch
+      ? `<a class="tooltip-source" href="${f.source_url}" target="_blank" rel="noopener noreferrer">Source ↗</a>`
+      : `<p class="tooltip-source">Click for source ↗</p>`
+    : `<p class="tooltip-source">(no source URL)</p>`;
   return {
     html: `
       <div class="tooltip-inner">
         <p class="tooltip-name">${f.name}</p>
         <p class="tooltip-operator">${f.operator}</p>
         <p class="tooltip-mw"><span class="tooltip-mw-num">${f.mw.toLocaleString()}</span> MW</p>
-        <p class="tooltip-source">${f.source_url ? 'Click for source ↗' : '(no source URL)'}</p>
+        ${sourceLine}
       </div>
     `,
     style: {
@@ -50,6 +72,10 @@ function buildTooltip(info: PickingInfo): { html: string; style: object } | null
       color: '#f3f4f6',
       maxWidth: '220px',
       lineHeight: '1.6',
+      // Touch: tooltip becomes interactive so the <a> link captures taps.
+      // Pointer: keep deck.gl's default (none) so the tooltip can't eat hover
+      // events from neighboring dots.
+      ...(isTouch ? { pointerEvents: 'auto' } : {}),
     },
   };
 }
@@ -77,8 +103,14 @@ function MapView() {
     };
   }, []);
 
+  // Detected once at mount; affects both tooltip rendering and onClick wiring.
+  // Stored in a ref so the deck.gl callbacks see the same value across re-renders.
+  const isTouchRef = useRef<boolean>(false);
+
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
+
+    isTouchRef.current = isTouchDevice();
 
     const map = new maplibregl.Map({
       container: containerRef.current,
@@ -100,11 +132,15 @@ function MapView() {
     const overlay = new MapboxOverlay({
       interleaved: false,
       layers: [],
-      getTooltip: buildTooltip,
+      getTooltip: (info) => buildTooltip(info, isTouchRef.current),
       // Pointer-cursor on facility hover signals the dot is clickable
       // (paired with the ScatterplotLayer.onClick handler below).
-      getCursor: ({ isDragging, isHovering }) =>
-        isDragging ? 'grabbing' : isHovering ? 'pointer' : 'grab',
+      // Skipped on touch — pointer cursor has no meaning on a touchscreen and
+      // the click affordance there is the <a> inside the tooltip, not the dot.
+      getCursor: isTouchRef.current
+        ? undefined
+        : ({ isDragging, isHovering }) =>
+            isDragging ? 'grabbing' : isHovering ? 'pointer' : 'grab',
       useDevicePixels: Math.min(window.devicePixelRatio ?? 1, 2),
     });
 
@@ -154,13 +190,18 @@ function MapView() {
       radiusMinPixels: 8,
       opacity: 0.7,
       pickable: true,
-      // Interim: clicking a dot opens the cited source URL in a new tab.
-      // Replaced by USD-22's side-panel + URL state when that ships.
-      onClick: ({ object }) => {
-        const f = object as Facility | undefined;
-        if (!f?.source_url) return;
-        window.open(f.source_url, '_blank', 'noopener,noreferrer');
-      },
+      // Interim: on pointer devices, clicking a dot opens the cited source URL
+      // in a new tab (the deck.gl tooltip auto-dismisses on mouseleave so the
+      // <a> inside is unreachable with a mouse). On touch devices we leave
+      // onClick unset — tapping a dot shows a pinned tooltip whose <a> link
+      // captures the next tap. USD-22's side-panel + URL state replaces both.
+      onClick: isTouchRef.current
+        ? undefined
+        : ({ object }) => {
+            const f = object as Facility | undefined;
+            if (!f?.source_url) return;
+            window.open(f.source_url, '_blank', 'noopener,noreferrer');
+          },
     });
 
     overlayRef.current.setProps({ layers: [layer] });
