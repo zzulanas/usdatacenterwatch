@@ -31,6 +31,13 @@ export interface Facility {
   mw: number;
   /** Sourcing confidence — drives UI affordances (low → "estimated", high → "operator-disclosed"). */
   confidence: 'high' | 'medium' | 'low';
+  /**
+   * Lifecycle stage. Drives map dot styling (teal filled / amber filled /
+   * gray outline / dim red) so users can tell active scale from pipeline
+   * scale at a glance. Optional on this seed type so older fallback entries
+   * default to "operational" in MapView.
+   */
+  status?: 'operational' | 'under_construction' | 'announced' | 'decommissioned';
   /** URL of a public document supporting the MW value above. */
   source_url: string;
 }

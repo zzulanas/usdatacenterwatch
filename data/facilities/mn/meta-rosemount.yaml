@@ -1,0 +1,62 @@
+slug: meta-rosemount-mn
+name: Rosemount Data Center
+operator: Meta
+tenant_type: hyperscaler
+status: under_construction
+location:
+  lng: -93.1283
+  lat: 44.7397
+city: Rosemount
+county: Dakota
+state: MN
+fips: "27037"
+acres: 280
+sqft: 715000
+year_built: 2026
+construction_capex_usd: 800000000
+jobs_construction: 1000
+jobs_permanent: 100
+# Notes:
+#   - status: under_construction. Announced March 13, 2024 by Gov. Walz; the
+#     campus is being built by Mortenson on a 280-acre parcel of former
+#     industrial land in UMore Park. Operations begin 2026.
+#   - jobs_construction: 1,000 = "at least 1,000 skilled trade jobs at peak
+#     construction" per Gov. Walz's press release. Not cumulative.
+#   - jobs_permanent: 100 = "approximately 100 operational jobs" per Meta's
+#     own page + the governor's press release.
+# Fields intentionally omitted because no public source asserts the value:
+#   it_load_mw, total_mw, design_pue (not yet published)
+#   cooling_type, water_source (Meta typically uses indirect-evap but the
+#     per-site Rosemount design is not in the published materials)
+#   reported_annual_mwh (not yet operational)
+confidence: high
+last_verified: "2026-05-13"
+sources:
+  - url: https://datacenters.atmeta.com/2024/03/hello-rosemount/
+    accessed_at: "2026-05-13"
+    supports:
+      - name
+      - operator
+      - city
+      - state
+      - status
+      - sqft
+      - acres
+  - url: https://mn.gov/governor/newsroom/press-releases/?id=1055-614120
+    accessed_at: "2026-05-13"
+    supports:
+      - construction_capex_usd
+      - jobs_construction
+      - jobs_permanent
+      - status
+  - url: https://www.datacenterdynamics.com/en/news/meta-to-open-800m-data-center-in-rosemount-minnesota/
+    accessed_at: "2026-05-13"
+    supports:
+      - construction_capex_usd
+      - sqft
+      - year_built
+  - url: https://www.mprnews.org/story/2024/03/14/meta-to-open-data-center-in-rosemount-in-2026
+    accessed_at: "2026-05-13"
+    supports:
+      - year_built
+      - operator

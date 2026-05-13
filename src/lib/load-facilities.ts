@@ -36,7 +36,8 @@ export interface FacilityFromR2 {
   name: string;
   operator: string;
   tenant_type: string;
-  status: string;
+  /** Lifecycle stage — same union as Facility.status; mirrors the Zod enum. */
+  status: 'operational' | 'under_construction' | 'announced' | 'decommissioned';
   location: { lng: number; lat: number };
   // Derived from location for MapView compat
   lng: number;
@@ -64,7 +65,9 @@ export interface FacilityFromR2 {
 export interface FacilityForMap extends Facility {
   // Extra fields available when loaded from R2 (undefined when using seed data)
   tenant_type?: string;
-  status?: string;
+  // `status` is already on Facility but typed as a narrow union there; this
+  // alias keeps the field discoverable on the R2-side type without widening.
+  status?: Facility['status'];
   estimate?: FacilityFromR2['estimate'];
 }
 

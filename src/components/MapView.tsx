@@ -19,9 +19,59 @@ const US_BOUNDS: [[number, number], [number, number]] = [
   [-65, 52], // NE: past Maine / north of Minnesota
 ];
 
-// Accent color: neutral teal (#4fd1c5 at 70% opacity)
-const ACCENT_RGBA: [number, number, number, number] = [79, 209, 197, 179]; // ~0.7 opacity
-const ACCENT_STROKE: [number, number, number, number] = [79, 209, 197, 230];
+// Status-aware dot styling. Operational sites use the canonical teal; planned
+// facilities get visually distinct treatments so users can tell active scale
+// from pipeline scale at a glance.
+//
+//   operational         — teal filled (#4fd1c5)
+//   under_construction  — amber filled (#f59e0b) — "active build, on its way"
+//   announced           — gray outline-only — "not yet real"
+//   decommissioned      — dim red dashed (rare; v1 has none)
+//
+// Returned as a tuple { fill, stroke, opacity } so the deck.gl ScatterplotLayer
+// can drive each prop from a single function call per facility.
+type Rgba = [number, number, number, number];
+interface DotStyle {
+  fill: Rgba;
+  stroke: Rgba;
+  /** When false, the dot draws as outline-only (announced facilities) */
+  filled: boolean;
+}
+
+const STATUS_STYLES: Record<string, DotStyle> = {
+  operational: {
+    fill: [79, 209, 197, 179], // teal at ~0.7 opacity
+    stroke: [79, 209, 197, 230],
+    filled: true,
+  },
+  under_construction: {
+    fill: [245, 158, 11, 179], // amber at ~0.7 opacity
+    stroke: [245, 158, 11, 230],
+    filled: true,
+  },
+  announced: {
+    fill: [0, 0, 0, 0], // transparent — outline-only
+    stroke: [156, 163, 175, 220], // neutral-400, more visible because it's the only mark
+    filled: false,
+  },
+  decommissioned: {
+    fill: [185, 28, 28, 102], // dim red at ~0.4 opacity
+    stroke: [185, 28, 28, 200],
+    filled: true,
+  },
+};
+
+function styleForStatus(status: string | undefined): DotStyle {
+  return STATUS_STYLES[status ?? 'operational'] ?? STATUS_STYLES.operational!;
+}
+
+// Friendly labels used in the tooltip status pill
+const STATUS_LABELS: Record<string, string> = {
+  operational: 'operational',
+  under_construction: 'under construction',
+  announced: 'announced',
+  decommissioned: 'decommissioned',
+};
 
 /**
  * Touch-vs-pointer affordance split:
@@ -85,12 +135,29 @@ function issueLinkFor(f: Facility): string {
   return `${REPO_NEW_ISSUE}?${params.toString()}`;
 }
 
+// Status pill uses the same dot color palette so the two affordances visually
+// reinforce each other. Operational doesn't render a pill (it's the default).
+function statusPillHtml(status: string | undefined): string {
+  if (!status || status === 'operational') return '';
+  const label = STATUS_LABELS[status] ?? status;
+  // Borrow the dot stroke color for the pill outline; readable on dark bg.
+  const s = styleForStatus(status);
+  const rgba = (c: Rgba) => `rgba(${c[0]},${c[1]},${c[2]},${c[3] / 255})`;
+  const borderColor = rgba(s.stroke);
+  const fgColor = rgba(s.stroke);
+  return `<span class="tooltip-status" style="display:inline-block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;background:transparent;border:1px solid ${borderColor};color:${fgColor};padding:1px 6px;border-radius:9999px;margin-left:6px;vertical-align:middle;">${label}</span>`;
+}
+
 function buildTooltip(info: PickingInfo, isTouch: boolean): { html: string; style: object } | null {
   if (!info.object) return null;
   const f = info.object as Facility;
 
   const conf = CONFIDENCE_STYLES[f.confidence];
-  const confidencePill = `<span class="tooltip-confidence" style="display:inline-block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;background:${conf.bg};border:1px solid ${conf.border};color:${conf.fg};padding:1px 6px;border-radius:9999px;margin-left:6px;vertical-align:middle;">${f.confidence}</span>`;
+  // Pill includes the "confidence:" label inline so "high"/"medium"/"low" isn't
+  // ambiguous out of context. The label is rendered dimmer than the value so
+  // the user's eye still lands on the rating itself.
+  const confidencePill = `<span class="tooltip-confidence" style="display:inline-block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;background:${conf.bg};border:1px solid ${conf.border};color:${conf.fg};padding:1px 6px;border-radius:9999px;margin-left:6px;vertical-align:middle;"><span style="opacity:0.7;font-weight:500;">confidence:</span> ${f.confidence}</span>`;
+  const statusPill = statusPillHtml(f.status);
 
   const sourceLine = f.source_url
     ? isTouch
@@ -109,7 +176,7 @@ function buildTooltip(info: PickingInfo, isTouch: boolean): { html: string; styl
   return {
     html: `
       <div class="tooltip-inner">
-        <p class="tooltip-name">${f.name}${confidencePill}</p>
+        <p class="tooltip-name">${f.name}${confidencePill}${statusPill}</p>
         <p class="tooltip-operator">${f.operator}</p>
         <p class="tooltip-mw"><span class="tooltip-mw-num">${f.mw.toLocaleString()}</span> MW</p>
         ${sourceLine}
@@ -234,9 +301,15 @@ function MapView() {
       data: facilities as Facility[],
       getPosition: (f) => [f.lng, f.lat],
       getRadius: (f) => facilityRadius(f.mw),
-      getFillColor: ACCENT_RGBA,
-      getLineColor: ACCENT_STROKE,
+      // Status drives the dot styling: operational=teal filled, under_construction=
+      // amber filled, announced=gray outline-only, decommissioned=dim red dashed.
+      // See STATUS_STYLES at the top of the file for the full palette.
+      getFillColor: (f) => styleForStatus(f.status).fill,
+      getLineColor: (f) => styleForStatus(f.status).stroke,
       stroked: true,
+      // Bump line width on outline-only (announced) dots so they read as
+      // present-but-not-yet-real at continental zoom.
+      getLineWidth: (f) => (styleForStatus(f.status).filled ? 1 : 2),
       lineWidthMinPixels: 1,
       // Floor in pixels so facilities with no public IT load (mw=0 in the
       // normalizer) still render as a clickable dot at continental zoom.

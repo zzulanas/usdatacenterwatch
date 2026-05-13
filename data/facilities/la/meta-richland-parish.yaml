@@ -1,0 +1,65 @@
+slug: meta-richland-parish-la
+name: Hyperion (Richland Parish Data Center)
+operator: Meta
+tenant_type: hyperscaler
+status: under_construction
+location:
+  lng: -91.7556
+  lat: 32.4750
+city: Richland Parish
+county: Richland
+state: LA
+fips: "22083"
+acres: 2250
+sqft: 4000000
+year_built: 2028
+total_mw: 2000
+construction_capex_usd: 27000000000
+# Notes on the numbers above:
+#   - total_mw: 2,000 = the initial compute capacity Meta has publicly committed
+#     to ("over 2 GW" per Meta's own page); the campus is designed to scale to
+#     ~5 GW over several years (cited as the upper bound in Sherwood + IEEE
+#     Spectrum), but we model only the disclosed-and-built initial phase.
+#   - construction_capex_usd: $27B = the Meta + Blue Owl Capital financing
+#     closed in October 2025. Initial Meta-only commitment was $10B; the $27B
+#     figure is the full project value with Blue Owl's stake.
+#   - year_built: 2028 is the planned first-phase opening per Meta's page.
+#     The status remains `under_construction` (broke ground December 2024).
+# Fields intentionally omitted because no public source asserts the value:
+#   it_load_mw, design_pue (Meta has not disclosed effective PUE for Hyperion;
+#     total_mw above is the public "compute capacity" figure)
+#   cooling_type (the campus is being powered by 5.2 GW of new natural gas
+#     and uses liquid cooling per IEEE Spectrum, but we don't have a clean
+#     primary citation for the cooling design yet)
+#   water_source, power_sources, reported_annual_mwh (not operational yet)
+#   jobs_construction, jobs_permanent (not finalized in public materials)
+confidence: high
+last_verified: "2026-05-13"
+sources:
+  - url: https://datacenters.atmeta.com/richland-parish-data-center/
+    accessed_at: "2026-05-13"
+    supports:
+      - name
+      - operator
+      - city
+      - state
+      - status
+      - total_mw
+      - sqft
+      - year_built
+  - url: https://www.datacenterdynamics.com/en/news/meta-purchases-additional-1400-acres-for-hyperion-mega-data-center-expansion/
+    accessed_at: "2026-05-13"
+    supports:
+      - acres
+      - operator
+  - url: https://www.enr.com/articles/62766-27b-meta-data-center-pushes-louisiana-toward-massive-power-expansion
+    accessed_at: "2026-05-13"
+    supports:
+      - construction_capex_usd
+      - total_mw
+  - url: https://en.wikipedia.org/wiki/Hyperion_(data_center)
+    accessed_at: "2026-05-13"
+    supports:
+      - name
+      - operator
+      - status

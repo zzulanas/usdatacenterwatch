@@ -1,0 +1,61 @@
+slug: microsoft-mount-pleasant-wi
+name: Mount Pleasant Data Center Campus (Foxconn site)
+operator: Microsoft
+tenant_type: hyperscaler
+status: under_construction
+location:
+  lng: -87.9132
+  lat: 42.7236
+city: Mount Pleasant
+county: Racine
+state: WI
+fips: "55101"
+year_built: 2026
+construction_capex_usd: 7300000000
+# Notes:
+#   - This is the former Foxconn manufacturing site Microsoft repurposed for
+#     AI infrastructure. Original Foxconn $10B plant promise collapsed; Microsoft
+#     took over the land and is building a hyperscale campus on it.
+#   - construction_capex_usd: $7.3B = $3.3B initial commitment + $4B for the
+#     second-phase data center announced September 2025. The two figures are
+#     cumulative across the same campus, not separate sites.
+#   - sqft: 15 buildings approved (9 × ~580,000 sqft and 6 × ~568,000 sqft per
+#     CNBC's coverage of the January 2026 board approval) = ~8.6M sqft when
+#     fully built. We omit sqft until first phase comes online to avoid
+#     overstating current scale.
+#   - status: under_construction. Microsoft paused some Wisconsin construction
+#     in January 2025 then resumed/expanded in September 2025 with the second
+#     $4B announcement. First DC scheduled to open early 2026.
+# Fields intentionally omitted because no public source asserts the value:
+#   it_load_mw, total_mw, design_pue (Microsoft does not publish per-site IT load)
+#   sqft (15 approved buildings = ~8.6M sqft total; this number reflects future
+#     buildout, not current operational footprint)
+#   cooling_type, water_source (not in public materials for this site)
+#   address (no specific street address published; site is east of I-94 south
+#     of State Highway 11 per CNBC)
+confidence: high
+last_verified: "2026-05-13"
+sources:
+  - url: https://www.datacenterdynamics.com/en/news/microsoft-given-greenlight-for-15-more-data-center-buildings-in-mount-pleasant-wisconsin/
+    accessed_at: "2026-05-13"
+    supports:
+      - name
+      - operator
+      - status
+      - year_built
+  - url: https://www.cnbc.com/2026/01/26/microsoft-wins-approval-for-15-data-centers-at-wisconsin-foxconn-site.html
+    accessed_at: "2026-05-13"
+    supports:
+      - city
+      - state
+      - status
+  - url: https://www.constructiondive.com/news/microsoft-data-center-wisconsin-foxconn/716520/
+    accessed_at: "2026-05-13"
+    supports:
+      - construction_capex_usd
+      - operator
+  - url: https://www.cnbc.com/2025/09/18/microsoft-wisconsin-data-center.html
+    accessed_at: "2026-05-13"
+    supports:
+      - construction_capex_usd
+      - status
