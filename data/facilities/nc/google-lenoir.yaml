@@ -37,9 +37,19 @@ sources:
     supports:
       - construction_capex_usd
       - sqft
+  - url: https://www.cityoflenoir.com/CivicAlerts.aspx?AID=498
+    accessed_at: "2026-05-13"
+    supports:
+      - address
+      - operator
+      - county
+  - url: https://www.loopnet.com/property/708-lynhaven-st-sw-lenoir-nc-28645/37027-06161%20%201%20%201/
+    accessed_at: "2026-05-13"
+    supports:
+      - address
+      - location
   - url: https://baxtel.com/data-center/google-lenoir-nc
     accessed_at: "2026-05-13"
     supports:
       - sqft
       - year_built
-      - address
