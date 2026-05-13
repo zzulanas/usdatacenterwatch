@@ -138,9 +138,12 @@ test.describe('MapView (USD-10)', () => {
         const visible = await tooltip.isVisible().catch(() => false);
         if (visible) {
           tooltipFound = true;
-          // Confirm it contains an operator name
           const text = await tooltip.textContent();
+          // Confirm it contains an operator name
           expect(text).toMatch(/Meta|Google|Amazon Web Services|Microsoft/);
+          // Confirm it contains the MW datapoint (guards against buildTooltip
+          // silently dropping the number line — the primary user-facing value)
+          expect(text).toMatch(/\d+\s*MW/);
           break outer;
         }
       }

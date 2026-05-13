@@ -92,6 +92,10 @@ function MapView() {
       }
     });
 
+    // deck.gl v9 MapboxOverlay vs. maplibre-gl v5 IControl: type signatures
+    // diverge (Mapbox-only fields). Runtime is verified; cast is the
+    // upstream-recommended workaround. Re-evaluate when @deck.gl/mapbox ships
+    // maplibre-aware types.
     map.addControl(overlay as unknown as MaplibreIControl);
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
 

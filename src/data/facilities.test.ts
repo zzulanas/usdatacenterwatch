@@ -16,7 +16,7 @@ describe('facilityRadius()', () => {
   });
 
   it('grows sub-linearly (sqrt relationship)', () => {
-    // Doubling MW should increase radius by ~1.41x, not 2x
+    // Quadrupling MW (100 → 400) should double the radius, not quadruple it.
     const ratio = facilityRadius(400) / facilityRadius(100);
     expect(ratio).toBeCloseTo(2); // sqrt(400)/sqrt(100) = 20/10 = 2
   });
@@ -29,7 +29,8 @@ describe('SEED_FACILITIES', () => {
 
   it('each facility has required fields', () => {
     for (const f of SEED_FACILITIES) {
-      expect(f.id).toBeTruthy();
+      expect(f.slug).toBeTruthy();
+      expect(f.slug).toMatch(/^[a-z0-9-]+$/);
       expect(f.name).toBeTruthy();
       expect(f.operator).toBeTruthy();
       expect(f.lat).toBeGreaterThan(20); // continental US range
@@ -37,8 +38,14 @@ describe('SEED_FACILITIES', () => {
       expect(f.lng).toBeGreaterThan(-130);
       expect(f.lng).toBeLessThan(-60);
       expect(f.mw).toBeGreaterThan(0);
+      expect(['high', 'medium', 'low']).toContain(f.confidence);
       expect(f.source_url).toMatch(/^https:\/\//);
     }
+  });
+
+  it('slugs are unique', () => {
+    const slugs = SEED_FACILITIES.map((f) => f.slug);
+    expect(new Set(slugs).size).toBe(slugs.length);
   });
 
   it('includes expected operators', () => {

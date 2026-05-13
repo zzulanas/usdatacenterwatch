@@ -2,6 +2,10 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests/e2e',
+  // workers: 1 — maplibre/deck.gl WebGL cold start in Vite dev mode is not
+  // safe to parallelize: miniflare/workerd cold start under @astrojs/cloudflare
+  // throws "fetch failed" when hit by concurrent test workers. Revisit if/when
+  // we move e2e to run against `pnpm preview` (static dist) instead of dev.
   fullyParallel: false,
   workers: 1,
   forbidOnly: !!process.env.CI,

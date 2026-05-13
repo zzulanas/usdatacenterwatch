@@ -27,6 +27,11 @@ pnpm format     # prettier -w .
 - **Derived:** Neon DB (populated by ingest script from YAML) → `facilities-{hash}.json.gz` in R2
 - **Public assets:** `public/` — static files served as-is
 
+## Basemap
+
+Currently uses `demotiles.maplibre.org` as a stopgap (Protomaps' free CDN blocks
+`localhost`). **USD-9** replaces this with self-hosted PMTiles on R2.
+
 ## Source conventions
 
 - `src/pages/` — Astro pages (route = file path)
