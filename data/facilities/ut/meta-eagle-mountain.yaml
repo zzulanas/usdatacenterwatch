@@ -16,11 +16,21 @@ sqft: 4500000
 year_built: 2021
 cooling_type: evap
 total_mw: 300
+design_pue: 1.10
+# it_load_mw is conservative. Meta's 2022 environmental data disclosed
+# 504,049 MWh of annual electricity for Eagle Mountain. Back-calculated
+# with default assumptions (PUE 1.10, utilization 0.6, 8760 hr/yr):
+#   87 MW = 504,049 MWh / 8760 / 1.10 / 0.6
+# Caveat: the campus has expanded significantly since 2022 (the info-sheet
+# now lists 300 MW total nameplate; see total_mw above). The 87 MW figure
+# is the LOWER bound based on most recent publicly disclosed annual MWh
+# and will under-state current load. The 300 MW total_mw is the upper bound
+# (total facility, including PUE losses). Real IT load sits between.
+# Confidence: medium given the staleness + the gap between disclosed and
+# nameplate. A 2024 MWh disclosure would tighten this considerably.
+it_load_mw: 87
 construction_capex_usd: 1500000000
 # Fields intentionally omitted because no public source asserts the value:
-#   it_load_mw, design_pue (campus total power capacity is the only public figure;
-#     without it_load_mw the modeling pipeline emits no estimate row, so this
-#     facility renders without computed GWh/gallons until IT load is sourced)
 #   jobs_construction, jobs_permanent (Meta does not publish per-site headcount)
 #   water_source, power_sources (renewable tariff disclosed at corporate level
 #     but per-site grid mix is not broken out)
@@ -49,3 +59,17 @@ sources:
       - location
       - county
       - operator
+  # Annual electricity disclosure used to back-derive it_load_mw.
+  # Meta's 2023 sustainability report disclosed 504,049 MWh for 2022; the
+  # broader DCD summary corroborates and provides historical context
+  # (229,946 MWh in 2021 → 504,049 MWh in 2022, reflecting the
+  # campus ramp-up after the 2021 opening).
+  - url: https://sustainability.atmeta.com/wp-content/uploads/2023/07/Meta-2023-Environmental-Data-Index.pdf
+    accessed_at: "2026-05-13"
+    supports:
+      - it_load_mw
+      - design_pue
+  - url: https://www.datacenterdynamics.com/en/news/meta-data-center-electricity-consumption-hits-14975gwh-leased-data-center-use-nearly-doubles/
+    accessed_at: "2026-05-13"
+    supports:
+      - it_load_mw

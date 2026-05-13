@@ -83,9 +83,35 @@ _directly_ backs. Be precise — listing every field name is not the goal.
   acceptable source for `location` since most aggregator coordinates derive
   from geocoded addresses, but the underlying `address` should still trace
   to a primary source if the file asserts one.
-- `it_load_mw`, `total_mw`: must come from a source that prints the
-  megawatt figure. Backup-generator capacity is NOT IT load — do not
-  conflate.
+- `it_load_mw`, `total_mw`: hyperscalers rarely publish per-site MW
+  capacity directly. Acceptable sourcing paths, ordered by quality:
+  1. **Primary direct**: a source that prints the MW figure (rare for
+     hyperscalers; common for colos and crypto miners). Use with
+     `confidence: high` on the facility if other identity fields are also
+     primary-sourced.
+  2. **Derived from operator-published annual MWh**: Meta's sustainability
+     report and Apple's environmental responsibility report publish
+     per-site annual electricity consumption. Back-calculate to MW with
+     the modeling pipeline's defaults (`PUE × utilization × 8760 hr/yr`)
+     and document the derivation in an inline comment above the
+     `it_load_mw:` line. Confidence: medium (round-trips exactly through
+     `estimates.ts` but assumes default PUE/utilization). Cite both the
+     primary disclosure URL and any corroborating trade-press summary in
+     the source's `supports: [it_load_mw]`.
+  3. **Industry tracker / interconnection record** (interconnection.fyi,
+     datacenter.fyi, datacentermap): these aggregate from FCC, FERC,
+     utility tariffs, and permit reviews but rarely publish their
+     methodology per-record. Acceptable as a SOLE source only for
+     `total_mw` (nameplate / interconnection capacity), not `it_load_mw`.
+     Confidence on the facility: medium; add an inline note explaining
+     "Aggregator-cited, methodology not published — used as lower-bound
+     for total_mw" so the next reviewer knows the basis.
+  4. **DO NOT conflate**: backup-generator capacity, solar PPA size, or
+     renewable-procurement contracts are NOT IT load. Many hyperscalers
+     publish large renewable PPAs (Google's 407 MW MidAmerican deal for
+     Council Bluffs, Apple's 60 MW Maiden solar arrays); these tell you
+     nothing about the data center's actual load and must not back
+     `it_load_mw`.
 - `construction_capex_usd`: prefer a source that prints the dollar figure
   with context (single-build vs cumulative). When a figure is cumulative,
   add an inline `# Note on construction_capex_usd:` comment above the

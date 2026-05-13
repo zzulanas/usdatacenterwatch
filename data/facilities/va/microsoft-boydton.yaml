@@ -13,9 +13,19 @@ fips: "51117"
 acres: 360
 sqft: 1100000
 year_built: 2010
+# total_mw is from data-center industry trackers, not Microsoft. The
+# interconnection.fyi project record for the Microsoft "East Coast Data
+# Center" at Boydton lists "250+ MW" of power capacity served by Dominion
+# Energy Virginia. The datacenter.fyi public-record entry for the same site
+# (project ID d54a107d) lists 412.5 MW. These figures appear to reflect
+# different phases or interconnection-queue records rather than current
+# operational capacity. Using the conservative interconnection.fyi figure
+# (250 MW) for the campus total_mw. The 412.5 figure may include planned
+# expansion. Confidence on this specific field: low.
+total_mw: 250
 construction_capex_usd: 2000000000
 # Fields intentionally omitted because no public source asserts the value:
-#   it_load_mw, total_mw, design_pue (Microsoft does not publish per-site IT load)
+#   it_load_mw, design_pue (Microsoft does not publish per-site IT load)
 #   address (Microsoft does not publish a single street address for the campus)
 #   cooling_type, water_source (not consistently published across buildings)
 #   jobs_construction, jobs_permanent (per-site headcount not disclosed)
@@ -49,3 +59,12 @@ sources:
       - acres
       - location
       - sqft
+  # interconnection.fyi tracks utility-interconnection requests; their record
+  # for the Microsoft "East Coast Data Center" at Boydton lists "250+ MW"
+  # served by Dominion Energy Virginia. Aggregator-cited, methodology not
+  # published — used as a lower-bound for total_mw with low confidence on
+  # this specific field.
+  - url: https://www.interconnection.fyi/data-center/project/microsoft-corporation-east-coast-data-center-d54a107d
+    accessed_at: "2026-05-13"
+    supports:
+      - total_mw
