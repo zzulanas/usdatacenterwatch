@@ -26,13 +26,18 @@ const ACCENT_STROKE: [number, number, number, number] = [79, 209, 197, 230];
 function buildTooltip(info: PickingInfo): { html: string; style: object } | null {
   if (!info.object) return null;
   const f = info.object as Facility;
+  // The deck.gl tooltip is hover-only and auto-dismisses when the cursor
+  // leaves the dot — the anchor below is unreachable. Until USD-22 ships
+  // a proper side panel, clicking the dot itself opens the source URL.
+  // The "Click for source" wording is the affordance hint; the actual
+  // navigation happens via the layer's onClick handler.
   return {
     html: `
       <div class="tooltip-inner">
         <p class="tooltip-name">${f.name}</p>
         <p class="tooltip-operator">${f.operator}</p>
         <p class="tooltip-mw"><span class="tooltip-mw-num">${f.mw.toLocaleString()}</span> MW</p>
-        <a class="tooltip-source" href="${f.source_url}" target="_blank" rel="noopener noreferrer">Source ↗</a>
+        <p class="tooltip-source">${f.source_url ? 'Click for source ↗' : '(no source URL)'}</p>
       </div>
     `,
     style: {
@@ -96,6 +101,10 @@ function MapView() {
       interleaved: false,
       layers: [],
       getTooltip: buildTooltip,
+      // Pointer-cursor on facility hover signals the dot is clickable
+      // (paired with the ScatterplotLayer.onClick handler below).
+      getCursor: ({ isDragging, isHovering }) =>
+        isDragging ? 'grabbing' : isHovering ? 'pointer' : 'grab',
       useDevicePixels: Math.min(window.devicePixelRatio ?? 1, 2),
     });
 
@@ -145,6 +154,13 @@ function MapView() {
       radiusMinPixels: 8,
       opacity: 0.7,
       pickable: true,
+      // Interim: clicking a dot opens the cited source URL in a new tab.
+      // Replaced by USD-22's side-panel + URL state when that ships.
+      onClick: ({ object }) => {
+        const f = object as Facility | undefined;
+        if (!f?.source_url) return;
+        window.open(f.source_url, '_blank', 'noopener,noreferrer');
+      },
     });
 
     overlayRef.current.setProps({ layers: [layer] });
