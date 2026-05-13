@@ -54,10 +54,10 @@ water (`water_source`), economic (`construction_capex_usd`, `jobs_*`,
      numeric claim.
 
 3. **Omitted-field comment block.** Every YAML must end the data block with
-   an `# Fields intentionally omitted because no public source asserts the
-value:` comment listing the fields we looked for and could not source,
-   with a one-line reason per field. This prevents future curators from
-   re-doing the same dead-end research. Example: `or/meta-prineville.yaml`.
+   a `# Fields intentionally omitted because no public source asserts the value:`
+   comment listing the fields we looked for and could not source, with a
+   one-line reason per field. This prevents future curators from re-doing
+   the same dead-end research. Example: `or/meta-prineville.yaml`.
 
 4. **`confidence` is per-facility, not per-field.** Set `high` when IT load
    plus identity (name, operator, location, year) are all primary-sourced.
@@ -92,6 +92,11 @@ _directly_ backs. Be precise — listing every field name is not the goal.
   omission block clarifying the basis.
 - `year_built`: prefer the year the first building was operational, not
   the year construction began.
+- `fips`: the 5-digit county FIPS code. This is self-derivable from
+  `state` + `county` via the Census Geocoder
+  (`https://geocoding.geo.census.gov/`) — it does not need an entry in any
+  `supports[]` array. Double-check it: a wrong `fips` silently miscategorizes
+  the facility in any county-level UI filter.
 
 ## Workflow
 

@@ -43,10 +43,15 @@ sources:
       - address
       - operator
       - county
+  # NOTE: LoopNet's URL slug reads "lynhaven-st-sw" while the canonical
+  # Google/municipal address is "Lynhaven Dr" — LoopNet slugs are known to
+  # carry data-entry errors, and the parcel ID 06161-1-1 is the authoritative
+  # tie-back. This entry intentionally supports `location` only (the lat/lng
+  # pin derived from the parcel), NOT `address`, to avoid asserting a
+  # street-type spelling we have not independently confirmed.
   - url: https://www.loopnet.com/property/708-lynhaven-st-sw-lenoir-nc-28645/37027-06161%20%201%20%201/
     accessed_at: "2026-05-13"
     supports:
-      - address
       - location
   - url: https://baxtel.com/data-center/google-lenoir-nc
     accessed_at: "2026-05-13"
