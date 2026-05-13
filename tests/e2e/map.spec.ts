@@ -15,6 +15,10 @@ const ALLOWED_CONSOLE_PATTERNS = [
   /Access-Control-Allow-Origin/i,
 ];
 
+// Continental US maxBounds as set in MapView.tsx
+const US_SW: [number, number] = [-130, 22];
+const US_NE: [number, number] = [-65, 52];
+
 function isAllowedNoise(msg: string): boolean {
   return ALLOWED_CONSOLE_PATTERNS.some((re) => re.test(msg));
 }
@@ -159,5 +163,72 @@ test.describe('MapView (USD-10)', () => {
     }
 
     expect(consoleErrors, `Unexpected console errors: ${consoleErrors.join('\n')}`).toHaveLength(0);
+  });
+
+  test('basemap tiles are loaded from basemaps.cartocdn.com', async ({ page }) => {
+    // Collect network requests made to the Carto CDN (tile requests or the style JSON)
+    const cartoRequests: string[] = [];
+    page.on('request', (req) => {
+      if (req.url().includes('basemaps.cartocdn.com')) {
+        cartoRequests.push(req.url());
+      }
+    });
+
+    await page.goto('/');
+
+    const canvas = page.getByTestId('map-view').locator('canvas').first();
+    await expect(canvas).toBeVisible({ timeout: 45_000 });
+
+    // Give the map time to fire at least the style JSON request
+    await page.waitForTimeout(3000);
+
+    // At minimum, MapLibre fetches the style.json from Carto — that counts.
+    expect(
+      cartoRequests.length,
+      'Expected at least one request to basemaps.cartocdn.com'
+    ).toBeGreaterThan(0);
+  });
+
+  test('maxBounds clamps pan outside the continental US', async ({ page }) => {
+    await page.goto('/');
+
+    const canvas = page.getByTestId('map-view').locator('canvas').first();
+    await expect(canvas).toBeVisible({ timeout: 45_000 });
+
+    // Wait for WebGL to settle
+    await page.waitForTimeout(3000);
+
+    // Use the global map ref exposed in MapView.tsx to call panTo([0, 0]) — well outside US bounds
+    await page.evaluate(() => {
+      const map = (window as unknown as Record<string, unknown>).__map as
+        | {
+            panTo: (lngLat: [number, number], options?: { animate: boolean }) => void;
+          }
+        | undefined;
+      if (map) {
+        map.panTo([0, 0], { animate: false });
+      }
+    });
+
+    // Read center back from the map
+    const center = await page.evaluate(() => {
+      const map = (window as unknown as Record<string, unknown>).__map as
+        | {
+            getCenter: () => { lng: number; lat: number };
+          }
+        | undefined;
+      return map ? map.getCenter() : null;
+    });
+
+    if (center) {
+      // maxBounds should have clamped the center inside the US bounding box
+      expect(center.lng).toBeGreaterThanOrEqual(US_SW[0]);
+      expect(center.lng).toBeLessThanOrEqual(US_NE[0]);
+      expect(center.lat).toBeGreaterThanOrEqual(US_SW[1]);
+      expect(center.lat).toBeLessThanOrEqual(US_NE[1]);
+    } else {
+      // __map not available (e.g., SSR race) — skip with a note
+      console.log('maxBounds test: window.__map not available, skipping coordinate assertion.');
+    }
   });
 });

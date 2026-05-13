@@ -42,8 +42,9 @@ pnpm export-r2    # Neon → R2: export facilities-{hash}.json.gz + manifest.jso
 
 ## Basemap
 
-Currently uses `demotiles.maplibre.org` as a stopgap (Protomaps' free CDN blocks
-`localhost`). **USD-9** replaces this with self-hosted PMTiles on R2.
+Carto Dark Matter (free, attribution required). State + county lines + roads
+visible at appropriate zooms; dark theme matches our civic/journalistic aesthetic.
+Self-hosted PMTiles on R2 is the M2 upgrade — see Linear ticket USD-9.
 
 ## Source conventions
 

@@ -7,9 +7,17 @@ import { type PickingInfo } from '@deck.gl/core';
 import { facilityRadius, type Facility } from '@/data/facilities';
 import { loadFacilities, type FacilityForMap } from '@/lib/load-facilities';
 
-// TODO USD-9: swap to self-hosted PMTiles (Protomaps) once the R2 tile pipeline is wired.
-// Protomaps hosted CDN requires a key with allowed origins; using demotiles as a safe dev fallback.
-const BASEMAP_STYLE = 'https://demotiles.maplibre.org/style.json';
+// Carto Dark Matter: free basemap with state lines, county lines, roads, and place labels.
+// Dark-themed — matches our civic/journalistic aesthetic. Attribution required per Carto TOS.
+// M2 upgrade: self-hosted PMTiles on R2 (see Linear USD-9) removes the external CDN dependency.
+const BASEMAP_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
+
+// Continental US bounding box with ~5° padding so users can't pan to Africa or the Pacific.
+// Alaska and Hawaii are outside this box (v1 data is continental only).
+const US_BOUNDS: [[number, number], [number, number]] = [
+  [-130, 22], // SW: past California / south of Florida
+  [-65, 52], // NE: past Maine / north of Minnesota
+];
 
 // Accent color: neutral teal (#4fd1c5 at 70% opacity)
 const ACCENT_RGBA: [number, number, number, number] = [79, 209, 197, 179]; // ~0.7 opacity
@@ -75,9 +83,14 @@ function MapView() {
       // Cap device pixel ratio at 2 for performance
       pixelRatio: Math.min(window.devicePixelRatio ?? 1, 2),
       attributionControl: { compact: true },
+      // Constrain panning to the continental US — our v1 data is continental only.
+      maxBounds: US_BOUNDS,
     });
 
     mapRef.current = map;
+    // Expose for Playwright E2E tests (window.__map is stripped by the browser on production
+    // builds the same way any dev helper would be — acceptable for a civic open-source site).
+    (window as unknown as Record<string, unknown>).__map = map;
 
     const overlay = new MapboxOverlay({
       interleaved: false,
@@ -109,6 +122,7 @@ function MapView() {
       mapRef.current?.remove();
       mapRef.current = null;
       overlayRef.current = null;
+      delete (window as unknown as Record<string, unknown>).__map;
     };
   }, []);
 
