@@ -12,7 +12,6 @@ state: NC
 fips: "37161"
 sqft: 1300000
 year_built: 2012
-cooling_type: evap
 # construction_capex_usd here is Meta's disclosed cumulative investment in the
 # Forest City campus over ~14 years (NOT a single-build capex). Treated as the
 # best available capital-investment number per the info-sheet language.
@@ -22,6 +21,10 @@ construction_capex_usd: 750000000
 #   acres (campus acreage not in Meta's public materials)
 #   address (no public street address found in Meta's info-sheet or Rutherford
 #     County GIS during curation)
+#   cooling_type (Meta's indirect-evaporative design is documented at the
+#     program level — DCK's "Facebook's new cooling design" article — but no
+#     per-site Forest City citation traced; remove rather than assert by
+#     inference from program-level reporting)
 #   jobs_construction, jobs_permanent, power_sources (per-site headcount + grid
 #     mix not disclosed)
 confidence: medium

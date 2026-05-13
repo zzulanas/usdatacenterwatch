@@ -6,7 +6,6 @@ status: operational
 location:
   lng: -81.2070
   lat: 35.5755
-address: 5977 Startown Rd, Maiden, NC 28650
 city: Maiden
 county: Catawba
 state: NC
@@ -17,8 +16,16 @@ year_built: 2010
 construction_capex_usd: 4000000000
 # Fields intentionally omitted because no public source asserts the value:
 #   it_load_mw, total_mw, design_pue (Apple does not publish per-site IT load)
+#   address (the widely cited "5977 Startown Rd" was traced only to
+#     datacenters.com, a tertiary aggregator — per the README sourcing rules,
+#     address may not derive solely from an aggregator chain. Re-add when a
+#     Catawba County parcel record or Apple-published address can be cited.)
 #   cooling_type, water_source (not in Apple's public materials for Maiden)
 #   jobs_construction, jobs_permanent (per-site headcount not disclosed)
+# Note on construction_capex_usd: $4B is Catawba Economic Development
+# Corporation's stated cumulative investment figure at the Maiden site
+# (corroborated by Hickory Record's local coverage of the 2021 $448M
+# tranche). Not a single-build capex.
 # Note on power_sources: Apple operates three adjacent 100-acre / ~20 MW solar
 # arrays plus a 10 MW fuel cell installation at this site (see 9to5mac and
 # datacenters.com sources), but the share of facility load served by these
@@ -31,7 +38,6 @@ sources:
     supports:
       - name
       - operator
-      - address
       - city
       - state
       - year_built
@@ -42,13 +48,19 @@ sources:
     supports:
       - year_built
       - operator
-  - url: https://dgtlinfra.com/apple-data-center-locations/
+  - url: https://hickoryrecord.com/news/local/apple-deal-includes-448-million-investment-in-maiden/article_eee0e1be-a917-11eb-b21a-3306cdfc343d.html
     accessed_at: "2026-05-13"
     supports:
       - construction_capex_usd
-      - acres
+      - operator
+      - county
   - url: https://www.catawbaedc.org/data-centers
     accessed_at: "2026-05-13"
     supports:
       - county
       - operator
+      - construction_capex_usd
+  - url: https://dgtlinfra.com/apple-data-center-locations/
+    accessed_at: "2026-05-13"
+    supports:
+      - acres
