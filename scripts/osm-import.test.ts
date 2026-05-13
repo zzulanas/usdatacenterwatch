@@ -197,6 +197,17 @@ describe('normalizeOperator', () => {
       expect(normalizeOperator(alias)).toBe(canonical);
     }
   });
+
+  // CA-pilot alias additions
+  it('normalizes CenturyLink → Lumen Technologies (post-rebrand)', () => {
+    expect(normalizeOperator('CenturyLink')).toBe('Lumen Technologies');
+    expect(normalizeOperator('Centurylink')).toBe('Lumen Technologies');
+  });
+
+  it('normalizes CoreSite legal entity → CoreSite', () => {
+    expect(normalizeOperator('CoreSite Real Estate 1656 McCarthy, L.P.')).toBe('CoreSite');
+    expect(normalizeOperator('Coresite')).toBe('CoreSite');
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -226,6 +237,64 @@ describe('deriveTenantType', () => {
 
   it('enterprise for unknown operator', () => {
     expect(deriveTenantType('Bank of America')).toBe('enterprise');
+  });
+
+  // CA-pilot additions
+  it('colo for Hurricane Electric', () => {
+    expect(deriveTenantType('Hurricane Electric')).toBe('colo');
+  });
+
+  it('colo for EdgeConneX', () => {
+    expect(deriveTenantType('EdgeConneX')).toBe('colo');
+  });
+
+  it('colo for OpenColo', () => {
+    expect(deriveTenantType('OpenColo')).toBe('colo');
+  });
+
+  it('colo for LightEdge', () => {
+    expect(deriveTenantType('LightEdge')).toBe('colo');
+  });
+
+  it('colo for TPx Communications', () => {
+    expect(deriveTenantType('TPx Communications')).toBe('colo');
+  });
+
+  // "One Wilshire" is intentionally NOT in COLOS — it's a building name, not
+  // an operator company. The one-wilshire-los-angeles-ca.yaml file hardcodes
+  // tenant_type: colo as a manual override. This test guards the COLOS set
+  // shape rather than the YAML's classification.
+  it('enterprise for "One Wilshire" (building name, not a company — YAML overrides)', () => {
+    expect(deriveTenantType('One Wilshire')).toBe('enterprise');
+  });
+
+  it('colo for SV Colo', () => {
+    expect(deriveTenantType('SV Colo')).toBe('colo');
+  });
+
+  // Name-fallback alias tests — when OSM lacks an `operator` tag, the script
+  // uses `name` as the operator. These aliases canonicalize common name-as-
+  // operator patterns so the COLOS/HYPERSCALERS lookup succeeds.
+  it('alias: "LightEdge SAN1" → LightEdge → colo', () => {
+    expect(deriveTenantType(normalizeOperator('LightEdge SAN1'))).toBe('colo');
+  });
+
+  it('alias: "NTT Limited" → NTT → colo', () => {
+    expect(deriveTenantType(normalizeOperator('NTT Limited'))).toBe('colo');
+  });
+
+  it('alias: "American Telephone & Telegraph" → AT&T → enterprise', () => {
+    // AT&T is not in COLOS (they don't sell third-party colocation) — the
+    // alias normalizes the name but the classification stays enterprise.
+    expect(normalizeOperator('American Telephone & Telegraph')).toBe('AT&T');
+  });
+
+  it('alias: "PG&E Datacenter" → PG&E', () => {
+    expect(normalizeOperator('PG&E Datacenter')).toBe('PG&E');
+  });
+
+  it('alias: "Dell 350 Holger Way" → Dell', () => {
+    expect(normalizeOperator('Dell 350 Holger Way')).toBe('Dell');
   });
 });
 

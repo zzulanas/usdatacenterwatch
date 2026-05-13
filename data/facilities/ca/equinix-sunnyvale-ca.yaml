@@ -1,0 +1,32 @@
+# Auto-imported from OpenStreetMap on 2026-05-13 via scripts/osm-import.ts.
+# All fields below are from OSM tags; nothing has been independently verified.
+# Curators: upgrade `confidence` to `medium` after cross-checking against a
+# secondary source (utility filings, county GIS, trade press). See
+# data/facilities/README.md for the sourcing hierarchy.
+# Fields intentionally omitted — OSM does not reliably tag these values:
+#   acres, sqft, year_built, it_load_mw, total_mw, design_pue, cooling_type
+#   water_source, construction_capex_usd, jobs_construction, jobs_permanent
+#   reported_annual_mwh, reported_annual_gallons, power_sources, subsidies
+#   fips (leave null; a future curation pass fills this in via Census Geocoder)
+slug: "equinix-sunnyvale-ca"
+name: "Equinix SV4"
+operator: "Equinix"
+tenant_type: "colo"
+status: "operational"
+location:
+  lng: -122.0145563
+  lat: 37.4145109
+address: "255 Caspian Drive, Sunnyvale, CA"
+city: "Sunnyvale"
+state: "CA"
+confidence: "low"
+last_verified: "2026-05-13"
+sources:
+  - url: "https://www.openstreetmap.org/way/99813512"
+    accessed_at: "2026-05-13"
+    supports:
+      - "location"
+      - "name"
+      - "operator"
+      - "city"
+      - "state"

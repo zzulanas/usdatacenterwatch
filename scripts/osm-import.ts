@@ -126,6 +126,20 @@ export const OPERATOR_ALIASES: Record<string, string> = {
   IBM: 'IBM',
   Oracle: 'Oracle',
   Salesforce: 'Salesforce',
+  // CenturyLink rebranded to Lumen Technologies in 2020; OSM still uses old name in some records
+  Centurylink: 'Lumen Technologies',
+  CenturyLink: 'Lumen Technologies',
+  // CoreSite legal entity names map to canonical brand
+  'CoreSite Real Estate 1656 McCarthy, L.P.': 'CoreSite',
+  Coresite: 'CoreSite',
+  // Name-fallback aliases: when OSM has no `operator` tag the script uses
+  // `name` as the operator. These map common name-as-operator patterns to
+  // the canonical company so tenant_type lookup succeeds.
+  'LightEdge SAN1': 'LightEdge',
+  'NTT Limited': 'NTT',
+  'American Telephone & Telegraph': 'AT&T',
+  'PG&E Datacenter': 'PG&E',
+  'Dell 350 Holger Way': 'Dell',
 };
 
 // Known hyperscaler operators (post-alias-normalization)
@@ -168,6 +182,19 @@ const COLOS = new Set([
   'AiNET',
   'True North Data Solutions',
   'TierPoint',
+  // West Coast / CA-pilot additions (verified from OSM data):
+  'Hurricane Electric', // backbone carrier + colo; large Fremont campus (HE.net)
+  'EdgeConneX', // wholesale/hyperscale-edge colo; multiple CA campuses
+  'OpenColo', // Santa Clara colo operator
+  'LightEdge', // colo with multiple US locations; SAN1 campus in San Diego
+  'TPx Communications', // SoCal colo operator (formerly TelePacific)
+  // NOTE: One Wilshire (624 S. Grand Ave LA) is a CARRIER-HOTEL BUILDING,
+  // not an operator company — many independent colos rent space there. We
+  // keep the YAML record because the building itself is the most important
+  // carrier interconnect on the US West Coast, but `tenant_type: colo` is
+  // hardcoded in that file instead of being driven by this set (the COLOS
+  // set is for operator company names only).
+  'SV Colo', // Santa Clara colo
 ]);
 
 // OSM names that imply a single building within a larger campus.
@@ -185,6 +212,7 @@ const BUILDING_NAME_PATTERN = /\b(Building|Block|Phase|Wing|Tower|Bldg|DC)\s*[A-
 // list as future state pilots surface more false positives.
 const OSM_FALSE_POSITIVE_IDS = new Set<string>([
   'way/300970761', // Golds Gym Ashburn (telecom=data_center applied to a gym)
+  'way/30666790', // USPS Terminal Annex Los Angeles (federal mail sorting facility, not a commercial DC)
 ]);
 
 // ---------------------------------------------------------------------------
