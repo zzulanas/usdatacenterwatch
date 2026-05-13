@@ -15,6 +15,9 @@ export default defineConfig({
   reporter: process.env.CI ? 'github' : 'list',
   timeout: 90_000,
   use: {
+    // Port 4322 by default — local dev uses 4321, so e2e on a separate port lets
+    // a developer keep `pnpm dev` open while running tests. Override with
+    // PLAYWRIGHT_PORT in environments where 4322 is occupied (parallel worktrees).
     baseURL: `http://localhost:${port}`,
     trace: 'retain-on-failure',
   },
