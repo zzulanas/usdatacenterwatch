@@ -1,13 +1,251 @@
 ---
+import yaml from 'yaml';
 import Layout from '@/components/Layout.astro';
+import { FacilityYamlSchema } from '@/lib/zod-facility-schema';
+
+// Same build-time YAML enumeration pattern as the homepage facility-count
+// banner and the methodology calibration table. Counts stay in sync with the
+// deployed dataset because CI runs the build after ingest/export.
+const facilityYamlFiles = import.meta.glob('/data/facilities/*/*.yaml', {
+  eager: true,
+  query: '?raw',
+  import: 'default',
+}) as Record<string, string>;
+
+const facilities = Object.values(facilityYamlFiles)
+  .map((raw) => FacilityYamlSchema.safeParse(yaml.parse(raw)))
+  .filter((r): r is { success: true; data: ReturnType<typeof FacilityYamlSchema.parse> } => r.success)
+  .map((r) => r.data);
+
+const totalCount = facilities.length;
+const byStatus = facilities.reduce<Record<string, number>>((acc, f) => {
+  const k = f.status ?? 'operational';
+  acc[k] = (acc[k] ?? 0) + 1;
+  return acc;
+}, {});
+const byConfidence = facilities.reduce<Record<string, number>>((acc, f) => {
+  acc[f.confidence] = (acc[f.confidence] ?? 0) + 1;
+  return acc;
+}, {});
+const operatorSet = new Set(facilities.map((f) => f.operator));
+const stateSet = new Set(facilities.map((f) => f.state).filter(Boolean));
 ---
 
 <Layout title="About — US Data Center Watch">
-  <div class="max-w-3xl mx-auto px-4 py-12">
+  <div class="max-w-3xl mx-auto px-4 py-12 text-neutral-200">
     <h1 class="text-2xl font-semibold text-neutral-100">About</h1>
-    <p class="mt-4 text-neutral-400 text-sm">
-      US Data Center Watch is an open-source, civic-transparency tool mapping US data centers with
-      modeled community-impact data: power, water, land, public subsidies, and jobs.
+
+    <section class="mt-8 space-y-3 text-sm leading-relaxed">
+      <h2 class="text-lg font-semibold text-neutral-100">What this is</h2>
+      <p>
+        US Data Center Watch is an open-source map of US data centers with modeled
+        community-impact data: annual electricity consumption, water withdrawal, land
+        footprint, capital investment, and where public — public subsidies and jobs.
+        Every number on the site traces to a public source with a date-verified citation.
+      </p>
+    </section>
+
+    <section class="mt-8 space-y-3 text-sm leading-relaxed">
+      <h2 class="text-lg font-semibold text-neutral-100">Why it exists</h2>
+      <p>
+        Hyperscale operators publish global aggregates (Meta's fleet used 14,975 GWh in
+        2024; Google used 30.8 million MWh) but rarely break those numbers out per site.
+        Communities hosting a campus see the substations and water lines but not the
+        operator's own annual disclosures, the subsidies that got the deal done, or how
+        their site compares to the next one over. We connect those public threads to a
+        map so the local picture is visible alongside the national one.
+      </p>
+      <p class="text-neutral-300">
+        We do not run any servers ourselves, run no ads, and accept no operator funding.
+        The site is a static export from a YAML-source-of-truth — anyone can audit the
+        pipeline, the model, or open a correction against a single facility.
+      </p>
+    </section>
+
+    <section class="mt-8 space-y-3 text-sm leading-relaxed">
+      <h2 class="text-lg font-semibold text-neutral-100">What's in the data right now</h2>
+      <div class="mt-3 grid grid-cols-2 gap-6">
+        <div>
+          <h3 class="text-xs font-mono text-neutral-500 uppercase">Coverage</h3>
+          <table class="mt-2 text-sm w-full">
+            <tbody>
+              <tr class="border-b border-neutral-800 last:border-b-0">
+                <td class="py-1 text-neutral-400">Facilities</td>
+                <td class="py-1 text-right text-neutral-100 font-mono">{totalCount}</td>
+              </tr>
+              <tr class="border-b border-neutral-800 last:border-b-0">
+                <td class="py-1 text-neutral-400">Operators</td>
+                <td class="py-1 text-right text-neutral-100 font-mono">{operatorSet.size}</td>
+              </tr>
+              <tr class="border-b border-neutral-800 last:border-b-0">
+                <td class="py-1 text-neutral-400">States</td>
+                <td class="py-1 text-right text-neutral-100 font-mono">{stateSet.size}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <h3 class="text-xs font-mono text-neutral-500 uppercase">Status mix</h3>
+          <table class="mt-2 text-sm w-full">
+            <tbody>
+              {['operational', 'under_construction', 'announced', 'decommissioned'].map((s) => (
+                <tr class="border-b border-neutral-800 last:border-b-0">
+                  <td class="py-1 text-neutral-400">{s.replace('_', ' ')}</td>
+                  <td class="py-1 text-right text-neutral-100 font-mono">{byStatus[s] ?? 0}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="mt-3">
+        <h3 class="text-xs font-mono text-neutral-500 uppercase">Sourcing confidence</h3>
+        <table class="mt-2 text-sm w-full max-w-sm">
+          <tbody>
+            {['high', 'medium', 'low'].map((c) => (
+              <tr class="border-b border-neutral-800 last:border-b-0">
+                <td class="py-1 text-neutral-400">{c}</td>
+                <td class="py-1 text-right text-neutral-100 font-mono">{byConfidence[c] ?? 0}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p class="text-xs text-neutral-500 mt-2">
+          <code class="text-neutral-400">high</code> = primary operator disclosure or
+          government filing;
+          <code class="text-neutral-400">medium</code> = derived from disclosed annual MWh
+          or backed by trade press;
+          <code class="text-neutral-400">low</code> = OSM-imported stubs awaiting
+          human curation. See the
+          <a class="underline hover:text-neutral-100" href="/methodology"
+            >methodology page</a
+          > for the modeling pipeline.
+        </p>
+      </div>
+    </section>
+
+    <section class="mt-8 space-y-3 text-sm leading-relaxed">
+      <h2 class="text-lg font-semibold text-neutral-100">How we source data</h2>
+      <p>
+        The source-of-truth is hand-written YAML in
+        <code>data/facilities/{'{state}/{slug}.yaml'}</code> in our public repo. Every
+        field traces to a URL in a <code>sources[]</code> array whose
+        <code>supports[]</code> list names which fields each URL backs. The full
+        sourcing hierarchy and the omitted-field discipline ("don't fabricate; explain
+        why we don't have it") are documented in the
+        <a
+          class="underline hover:text-neutral-100"
+          href="https://github.com/zzulanas/usdatacenterwatch/blob/main/data/facilities/README.md"
+          target="_blank"
+          rel="noopener noreferrer">curation guide</a
+        >.
+      </p>
+      <p class="text-neutral-300">
+        We default to <em>strict primary sourcing</em>: operator-published material first,
+        local government / EDC records second, named trade journalism third, aggregators
+        last. Where an operator publishes annual MWh but not nameplate capacity (Meta,
+        Apple do this), we back-derive IT load using the modeling pipeline's
+        published assumptions and flag the field as
+        <code class="text-amber-400">confidence: medium</code>.
+      </p>
+    </section>
+
+    <section class="mt-8 space-y-3 text-sm leading-relaxed">
+      <h2 class="text-lg font-semibold text-neutral-100">How to contribute</h2>
+      <p>
+        Two paths, both via GitHub:
+      </p>
+      <ul class="list-disc list-inside space-y-1 text-neutral-300 marker:text-neutral-500">
+        <li>
+          <b>Spot something wrong, missing, or stale?</b> Use the
+          <a
+            class="underline hover:text-neutral-100"
+            href="https://github.com/zzulanas/usdatacenterwatch/issues/new?template=facility-correction.md"
+            target="_blank"
+            rel="noopener noreferrer">facility correction issue template</a
+          >
+          — pre-filled with the fields a curator needs. On mobile, every facility tooltip
+          has a "Report data issue ↗" link that pre-fills the slug for you.
+        </li>
+        <li>
+          <b>Want to curate a facility?</b> Read the
+          <a
+            class="underline hover:text-neutral-100"
+            href="https://github.com/zzulanas/usdatacenterwatch/blob/main/data/facilities/README.md"
+            target="_blank"
+            rel="noopener noreferrer">curation guide</a
+          >
+          and open a PR. Hand-curated facilities flow to the live map on the next deploy.
+        </li>
+      </ul>
+    </section>
+
+    <section class="mt-8 space-y-3 text-sm leading-relaxed">
+      <h2 class="text-lg font-semibold text-neutral-100">Tech credits</h2>
+      <ul class="list-disc list-inside space-y-1 text-neutral-300 marker:text-neutral-500">
+        <li>
+          <a
+            href="https://astro.build"
+            class="underline hover:text-neutral-100"
+            target="_blank"
+            rel="noopener noreferrer">Astro</a
+          > for the static-site framework
+        </li>
+        <li>
+          <a
+            href="https://maplibre.org"
+            class="underline hover:text-neutral-100"
+            target="_blank"
+            rel="noopener noreferrer">MapLibre GL JS</a
+          > +
+          <a
+            href="https://deck.gl"
+            class="underline hover:text-neutral-100"
+            target="_blank"
+            rel="noopener noreferrer">deck.gl</a
+          > for the map renderer
+        </li>
+        <li>
+          <a
+            href="https://carto.com/basemaps"
+            class="underline hover:text-neutral-100"
+            target="_blank"
+            rel="noopener noreferrer">Carto Dark Matter</a
+          > basemap (© OpenStreetMap, © Carto)
+        </li>
+        <li>
+          <a
+            href="https://www.openstreetmap.org"
+            class="underline hover:text-neutral-100"
+            target="_blank"
+            rel="noopener noreferrer">OpenStreetMap</a
+          > for the secondary-tier facility import (low-confidence stubs)
+        </li>
+        <li>
+          <a
+            href="https://pages.cloudflare.com"
+            class="underline hover:text-neutral-100"
+            target="_blank"
+            rel="noopener noreferrer">Cloudflare Pages</a
+          > hosting +
+          <a
+            href="https://www.cloudflare.com/products/r2/"
+            class="underline hover:text-neutral-100"
+            target="_blank"
+            rel="noopener noreferrer">R2</a
+          > for the static dataset
+        </li>
+      </ul>
+    </section>
+
+    <p class="mt-10 text-xs text-neutral-500">
+      Open source, MIT-licensed. Source:
+      <a
+        href="https://github.com/zzulanas/usdatacenterwatch"
+        class="underline hover:text-neutral-100"
+        target="_blank"
+        rel="noopener noreferrer">github.com/zzulanas/usdatacenterwatch</a
+      >.
     </p>
   </div>
 </Layout>
