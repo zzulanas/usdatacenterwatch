@@ -33,11 +33,17 @@ pnpm db:push      # push schema directly to DB — prototyping only, never in CI
 - **Derived:** Neon DB (populated by ingest script from YAML) → `facilities-{hash}.json.gz` in R2
 - **Public assets:** `public/` — static files served as-is
 
+## Basemap
+
+Currently uses `demotiles.maplibre.org` as a stopgap (Protomaps' free CDN blocks
+`localhost`). **USD-9** replaces this with self-hosted PMTiles on R2.
+
 ## Source conventions
 
 - `src/pages/` — Astro pages (route = file path)
-- `src/components/` — shared Astro + React components
+- `src/components/` — shared Astro + React components (key: `MapView.tsx` — MapLibre + deck.gl island, `client:only="react"`)
 - `src/components/ui/` — shadcn/ui primitives (Button, etc.)
+- `src/data/facilities.ts` — hardcoded seed facilities (USD-10; superseded by R2 pipeline in USD-11)
 - `src/lib/cn.ts` — Tailwind class merge helper (tested in `cn.test.ts`)
 - `src/styles/global.css` — Tailwind v4 `@import "tailwindcss"` + CSS variables
 - `scripts/` — ingest pipeline, DB migrations (never imported by pages)
