@@ -1,5 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const port = Number(process.env.PLAYWRIGHT_PORT ?? 4322);
+
 export default defineConfig({
   testDir: './tests/e2e',
   // workers: 1 — maplibre/deck.gl WebGL cold start in Vite dev mode is not
@@ -13,12 +15,12 @@ export default defineConfig({
   reporter: process.env.CI ? 'github' : 'list',
   timeout: 90_000,
   use: {
-    baseURL: 'http://localhost:4322',
+    baseURL: `http://localhost:${port}`,
     trace: 'retain-on-failure',
   },
   webServer: {
-    command: 'pnpm dev --port 4322',
-    port: 4322,
+    command: `pnpm dev --port ${port}`,
+    port,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },

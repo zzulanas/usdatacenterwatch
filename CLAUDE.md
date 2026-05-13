@@ -10,11 +10,16 @@ Astro 6 + React 19 (islands) + TypeScript strict + Tailwind v4 + shadcn/ui (new-
 
 ```bash
 pnpm dev        # dev server at http://localhost:4321
-pnpm build      # static output → dist/
+pnpm build      # static output → dist/client/ (Cloudflare adapter splits client + server)
 pnpm check      # typecheck + lint + unit tests + e2e — must pass before PR
 pnpm test       # vitest unit tests only
 pnpm e2e        # Playwright E2E tests against pnpm dev (port 4321)
 pnpm format     # prettier -w .
+
+# Deployment
+# Pages deploy targets dist/client/ — the adapter puts static HTML/assets there.
+# Deploy via wrangler: npx wrangler pages deploy dist/client --project-name=usdatacenterwatch
+# Production URL: https://usdatacenterwatch.pages.dev
 
 # Database (server-only — never run from browser context)
 pnpm db:generate  # generate migration SQL from schema diff (after editing src/db/schema.ts)
@@ -58,3 +63,17 @@ Currently uses `demotiles.maplibre.org` as a stopgap (Protomaps' free CDN blocks
 ## Branch discipline
 
 Never push to `main` directly. Branch `feat/usd-NN-slug` → PR → review → merge. Run `pnpm check && pnpm build` before pushing.
+
+## CI gates (every PR to main)
+
+`.github/workflows/ci.yml` runs on every PR and push to `main`:
+
+1. `pnpm typecheck` — Astro + TS check
+2. `pnpm lint` — ESLint
+3. `pnpm test` — Vitest unit tests
+4. `pnpm e2e` — Playwright E2E against `pnpm dev` (Chromium only)
+5. `pnpm build` — full Astro build
+
+All five must pass. On failure, the Playwright HTML report is uploaded as a CI artifact.
+
+`.github/workflows/deploy.yml` deploys to Cloudflare Pages on every push to `main` and creates PR preview deployments on every PR.

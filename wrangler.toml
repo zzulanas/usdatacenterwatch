@@ -1,0 +1,7 @@
+name = "usdatacenterwatch"
+compatibility_date = "2026-05-01"
+# The Astro + Cloudflare adapter outputs static files to dist/client/ (and a server prerender
+# entry to dist/server/). Pages deployment targets dist/client/ explicitly via the wrangler CLI
+# command in deploy.yml. We intentionally omit pages_build_output_dir here to avoid a conflict
+# where wrangler reads this file during the adapter's internal prerender step and adds the
+# reserved ASSETS binding, which Pages rejects.
