@@ -2,17 +2,27 @@
 import Layout from '@/components/Layout.astro';
 import MapView from '@/components/MapView';
 import { Button } from '@/components/ui/button';
+
+// Count curated facilities at build time via Vite's import.meta.glob — works in
+// both Node (astro build) and CF Workers (prerender) because the glob resolves
+// to a static module map during the Vite pass.
+// Matches what `pnpm ingest` ships to Neon → R2 → the live map (CI runs
+// ingest+export before the Astro build), so this number stays in sync with the
+// served dataset on every push to main.
+// `query: '?raw'` tells Vite to treat each match as a raw string asset rather
+// than a JS module — Rollup would otherwise try to parse YAML as JS and fail.
+// We only need the count, so the actual file contents are discarded.
+const facilityYamlFiles = import.meta.glob('/data/facilities/*/*.yaml', { query: '?raw' });
+const facilityCount = Object.keys(facilityYamlFiles).length;
 ---
 
 <Layout title="US Data Center Watch — Map">
   <div class="flex flex-col h-[calc(100vh-3.5rem)]">
     <!-- Filter bar stub -->
     <div class="border-b border-neutral-800 px-4 py-2 flex items-center gap-3">
-      <Button variant="outline" size="sm">
-        Filters
-      </Button>
+      <Button variant="outline" size="sm">Filters</Button>
       <span class="text-xs text-neutral-500 font-mono">
-        5 seed facilities — live data pipeline coming in USD-11
+        {facilityCount} hyperscale {facilityCount === 1 ? 'facility' : 'facilities'} curated
       </span>
     </div>
 
