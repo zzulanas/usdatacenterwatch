@@ -254,14 +254,14 @@ function MapView() {
       interleaved: false,
       layers: [],
       getTooltip: (info) => buildTooltip(info, isTouchRef.current),
-      // Pointer-cursor on facility hover signals the dot is clickable
-      // (paired with the ScatterplotLayer.onClick handler below).
-      // Skipped on touch — pointer cursor has no meaning on a touchscreen and
-      // the click affordance there is the <a> inside the tooltip, not the dot.
-      getCursor: isTouchRef.current
-        ? undefined
-        : ({ isDragging, isHovering }) =>
-            isDragging ? 'grabbing' : isHovering ? 'pointer' : 'grab',
+      // Pointer-cursor on facility hover signals the dot is clickable on
+      // desktop. Mobile browsers ignore cursor entirely — but deck.gl REQUIRES
+      // a function here (passing `undefined` throws `getCursor is not a
+      // function` during render and nukes the entire layer stack, which is
+      // why mobile dots disappeared in #26). Returning 'grab' on touch is a
+      // harmless no-op that keeps deck.gl happy.
+      getCursor: ({ isDragging, isHovering }) =>
+        isDragging ? 'grabbing' : isHovering && !isTouchRef.current ? 'pointer' : 'grab',
       useDevicePixels: Math.min(window.devicePixelRatio ?? 1, 2),
     });
 
