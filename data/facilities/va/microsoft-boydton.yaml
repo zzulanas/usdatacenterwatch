@@ -1,0 +1,51 @@
+slug: microsoft-boydton-va
+name: Boydton Data Center Campus (Mecklenburg)
+operator: Microsoft
+tenant_type: hyperscaler
+status: operational
+location:
+  lng: -78.3897
+  lat: 36.6669
+city: Boydton
+county: Mecklenburg
+state: VA
+fips: "51117"
+acres: 360
+sqft: 1100000
+year_built: 2010
+construction_capex_usd: 2000000000
+# Fields intentionally omitted because no public source asserts the value:
+#   it_load_mw, total_mw, design_pue (Microsoft does not publish per-site IT load)
+#   address (Microsoft does not publish a single street address for the campus)
+#   cooling_type, water_source (not consistently published across buildings)
+#   jobs_construction, jobs_permanent (per-site headcount not disclosed)
+#   power_sources (315 MW Virginia solar PPA was corporate-wide, not allocated
+#     to the Boydton campus specifically)
+confidence: medium
+last_verified: "2026-05-13"
+sources:
+  - url: https://local.microsoft.com/wp-content/uploads/2024/04/Microsoft-datacenters-in-Virginia.pdf
+    accessed_at: "2026-05-13"
+    supports:
+      - name
+      - operator
+      - city
+      - state
+      - construction_capex_usd
+  - url: https://www.datacenterdynamics.com/en/news/microsoft-files-for-six-building-data-center-campus-in-virginias-mecklenburg-county/
+    accessed_at: "2026-05-13"
+    supports:
+      - county
+      - operator
+      - sqft
+  - url: https://www.datacenterknowledge.com/hyperscalers/microsoft-s-1-billion-data-center
+    accessed_at: "2026-05-13"
+    supports:
+      - year_built
+      - construction_capex_usd
+  - url: https://baxtel.com/data-center/microsoft-boydton-va
+    accessed_at: "2026-05-13"
+    supports:
+      - acres
+      - location
+      - sqft

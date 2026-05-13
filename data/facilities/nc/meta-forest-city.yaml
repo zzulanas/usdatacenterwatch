@@ -1,0 +1,44 @@
+slug: meta-forest-city-nc
+name: Forest City Data Center Campus
+operator: Meta
+tenant_type: hyperscaler
+status: operational
+location:
+  lng: -81.8666
+  lat: 35.3380
+city: Forest City
+county: Rutherford
+state: NC
+fips: "37161"
+sqft: 1300000
+year_built: 2012
+cooling_type: evap
+# Fields intentionally omitted because no public source asserts the value:
+#   it_load_mw, total_mw, design_pue (Meta does not publish per-site IT load for Forest City)
+#   acres (campus acreage not in Meta's public materials)
+#   jobs_permanent, power_sources (per-site headcount + grid mix not disclosed)
+#   construction_capex_usd is captured from Meta's own statement of cumulative investment
+construction_capex_usd: 750000000
+confidence: medium
+last_verified: "2026-05-13"
+sources:
+  - url: https://datacenters.atmeta.com/asset/forest-city-data-center-info-sheet/
+    accessed_at: "2026-05-13"
+    supports:
+      - name
+      - operator
+      - city
+      - state
+      - sqft
+      - year_built
+      - construction_capex_usd
+  - url: https://www.datacenterknowledge.com/hyperscalers/facebook-doubling-down-on-data-center-in-north-carolina
+    accessed_at: "2026-05-13"
+    supports:
+      - sqft
+      - year_built
+  - url: https://baxtel.com/data-center/meta-forest-city-campus
+    accessed_at: "2026-05-13"
+    supports:
+      - location
+      - county

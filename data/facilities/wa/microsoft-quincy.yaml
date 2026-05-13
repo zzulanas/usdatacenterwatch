@@ -1,0 +1,47 @@
+slug: microsoft-quincy-wa
+name: Quincy Data Center Campus (Columbia Data Center)
+operator: Microsoft
+tenant_type: hyperscaler
+status: operational
+location:
+  lng: -119.8628
+  lat: 47.2364
+city: Quincy
+county: Grant
+state: WA
+fips: "53025"
+acres: 270
+sqft: 1500000
+year_built: 2007
+# Fields intentionally omitted because no public source asserts the value:
+#   it_load_mw, total_mw, design_pue (Microsoft does not publish per-site IT
+#     load; a 210 MW figure is for backup generators, not IT load)
+#   address (Microsoft does not publish a single street address for the campus)
+#   cooling_type, water_source (Microsoft has site-specific cooling research
+#     but no single published "type" for the Quincy buildings, which span
+#     ~15 years and multiple cooling generations)
+#   jobs_construction, jobs_permanent (per-site headcount not disclosed)
+#   construction_capex_usd, power_sources (per-site grid mix not disclosed)
+confidence: medium
+last_verified: "2026-05-13"
+sources:
+  - url: https://en.wikipedia.org/wiki/Columbia_Data_Center
+    accessed_at: "2026-05-13"
+    supports:
+      - name
+      - operator
+      - city
+      - state
+      - year_built
+      - sqft
+  - url: https://www.datacenterdynamics.com/en/analysis/inside-microsofts-quincy-data-center/
+    accessed_at: "2026-05-13"
+    supports:
+      - year_built
+      - sqft
+      - operator
+  - url: https://www.datacenterknowledge.com/hyperscalers/generator-permit-indicates-microsoft-plans-big-quincy-data-center-expansion
+    accessed_at: "2026-05-13"
+    supports:
+      - acres
+      - operator

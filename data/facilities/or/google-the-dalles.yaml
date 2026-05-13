@@ -1,0 +1,49 @@
+slug: google-the-dalles-or
+name: The Dalles Data Center Campus
+operator: Google
+tenant_type: hyperscaler
+status: operational
+location:
+  lng: -121.2010
+  lat: 45.6336
+address: 4200 Columbia Rd, The Dalles, OR 97058
+city: The Dalles
+county: Wasco
+state: OR
+fips: "41065"
+sqft: 350000
+year_built: 2006
+cooling_type: evap
+water_source: surface
+construction_capex_usd: 1800000000
+# Fields intentionally omitted because no public source asserts the value:
+#   it_load_mw, total_mw, design_pue (Google does not publish per-site IT load)
+#   acres (built on a former aluminum smelter site; published acreage not found)
+#   jobs_construction, jobs_permanent (per-site headcount not disclosed)
+#   power_sources (Google has 100% global renewable matching but per-site grid
+#     mix is not broken out)
+confidence: medium
+last_verified: "2026-05-13"
+sources:
+  - url: https://datacenters.google/locations/oregon/
+    accessed_at: "2026-05-13"
+    supports:
+      - name
+      - operator
+      - city
+      - state
+      - year_built
+  - url: https://www.constructiondive.com/news/google-whiting-turner-oregon-data-center/705938/
+    accessed_at: "2026-05-13"
+    supports:
+      - construction_capex_usd
+  - url: https://www.datacenterknowledge.com/hyperscalers/details-of-google-s-the-dalles-site-now-public
+    accessed_at: "2026-05-13"
+    supports:
+      - sqft
+      - year_built
+  - url: https://oregonbusiness.com/google-advances-commitment-to-the-dalles-launching-sustainable-water-storage-system/
+    accessed_at: "2026-05-13"
+    supports:
+      - water_source
+      - cooling_type
