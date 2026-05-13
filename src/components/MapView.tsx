@@ -1,10 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import maplibregl, { type IControl as MaplibreIControl } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { MapboxOverlay } from '@deck.gl/mapbox';
 import { ScatterplotLayer } from '@deck.gl/layers';
 import { type PickingInfo } from '@deck.gl/core';
-import { SEED_FACILITIES, facilityRadius, type Facility } from '@/data/facilities';
+import { facilityRadius, type Facility } from '@/data/facilities';
+import { loadFacilities, type FacilityForMap } from '@/lib/load-facilities';
 
 // TODO USD-9: swap to self-hosted PMTiles (Protomaps) once the R2 tile pipeline is wired.
 // Protomaps hosted CDN requires a key with allowed origins; using demotiles as a safe dev fallback.
@@ -44,6 +45,24 @@ function MapView() {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const overlayRef = useRef<MapboxOverlay | null>(null);
+  const [facilities, setFacilities] = useState<FacilityForMap[]>([]);
+
+  // Load facilities from R2 (or fall back to seed data) on mount.
+  // `cancelled` guards against setState after unmount if the user navigates
+  // away mid-fetch — the promise will resolve into a no-op instead.
+  useEffect(() => {
+    let cancelled = false;
+    loadFacilities()
+      .then((data) => {
+        if (!cancelled) setFacilities(data);
+      })
+      .catch(() => {
+        // loadFacilities always resolves; this catch is a safety net
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -60,23 +79,9 @@ function MapView() {
 
     mapRef.current = map;
 
-    const layer = new ScatterplotLayer<Facility>({
-      id: 'facilities',
-      data: SEED_FACILITIES,
-      getPosition: (f) => [f.lng, f.lat],
-      getRadius: (f) => facilityRadius(f.mw),
-      getFillColor: ACCENT_RGBA,
-      getLineColor: ACCENT_STROKE,
-      stroked: true,
-      lineWidthMinPixels: 1,
-      radiusMinPixels: 4,
-      opacity: 0.7,
-      pickable: true,
-    });
-
     const overlay = new MapboxOverlay({
       interleaved: false,
-      layers: [layer],
+      layers: [],
       getTooltip: buildTooltip,
       useDevicePixels: Math.min(window.devicePixelRatio ?? 1, 2),
     });
@@ -106,6 +111,27 @@ function MapView() {
       overlayRef.current = null;
     };
   }, []);
+
+  // Update the deck.gl layer whenever facilities data changes
+  useEffect(() => {
+    if (!overlayRef.current) return;
+
+    const layer = new ScatterplotLayer<Facility>({
+      id: 'facilities',
+      data: facilities as Facility[],
+      getPosition: (f) => [f.lng, f.lat],
+      getRadius: (f) => facilityRadius(f.mw),
+      getFillColor: ACCENT_RGBA,
+      getLineColor: ACCENT_STROKE,
+      stroked: true,
+      lineWidthMinPixels: 1,
+      radiusMinPixels: 4,
+      opacity: 0.7,
+      pickable: true,
+    });
+
+    overlayRef.current.setProps({ layers: [layer] });
+  }, [facilities]);
 
   return (
     <div
