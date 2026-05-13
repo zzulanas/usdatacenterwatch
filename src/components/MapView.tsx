@@ -139,7 +139,10 @@ function MapView() {
       getLineColor: ACCENT_STROKE,
       stroked: true,
       lineWidthMinPixels: 1,
-      radiusMinPixels: 4,
+      // Floor in pixels so facilities with no public IT load (mw=0 in the
+      // normalizer) still render as a clickable dot at continental zoom.
+      // The sqrt(mw)*1500 scale takes over for facilities with sourced load.
+      radiusMinPixels: 8,
       opacity: 0.7,
       pickable: true,
     });
