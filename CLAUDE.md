@@ -27,6 +27,7 @@ pnpm db:migrate   # apply pending migrations to DATABASE_URL (reads from env)
 pnpm db:studio    # open Drizzle Studio UI for the connected database
 pnpm db:push      # push schema directly to DB — prototyping only, never in CI
 pnpm ingest       # YAML → Postgres ingest: validate + upsert facilities + compute estimates
+pnpm export-r2    # Neon → R2: export facilities-{hash}.json.gz + manifest.json
 ```
 
 ## Static read-path invariant (non-negotiable)
@@ -49,7 +50,8 @@ Currently uses `demotiles.maplibre.org` as a stopgap (Protomaps' free CDN blocks
 - `src/pages/` — Astro pages (route = file path)
 - `src/components/` — shared Astro + React components (key: `MapView.tsx` — MapLibre + deck.gl island, `client:only="react"`)
 - `src/components/ui/` — shadcn/ui primitives (Button, etc.)
-- `src/data/facilities.ts` — hardcoded seed facilities (USD-10; superseded by R2 pipeline in USD-11)
+- `src/data/facilities.ts` — hardcoded seed facilities (build-time fallback when PUBLIC_R2_BASE_URL not set)
+- `src/lib/load-facilities.ts` — runtime R2 loader: fetches manifest → dataset; falls back to seed data
 - `src/lib/cn.ts` — Tailwind class merge helper (tested in `cn.test.ts`)
 - `src/styles/global.css` — Tailwind v4 `@import "tailwindcss"` + CSS variables
 - `scripts/` — ingest pipeline, DB migrations (never imported by pages)
