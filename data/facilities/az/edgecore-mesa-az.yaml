@@ -1,0 +1,31 @@
+# Auto-imported from OpenStreetMap on 2026-05-13 via scripts/osm-import.ts.
+# All fields below are from OSM tags; nothing has been independently verified.
+# Curators: upgrade `confidence` to `medium` after cross-checking against a
+# secondary source (utility filings, county GIS, trade press). See
+# data/facilities/README.md for the sourcing hierarchy.
+# Fields intentionally omitted — OSM does not reliably tag these values:
+#   acres, sqft, year_built, it_load_mw, total_mw, design_pue, cooling_type
+#   water_source, construction_capex_usd, jobs_construction, jobs_permanent
+#   reported_annual_mwh, reported_annual_gallons, power_sources, subsidies
+#   fips (leave null; a future curation pass fills this in via Census Geocoder)
+slug: "edgecore-mesa-az"
+name: "EdgeCore"
+operator: "EdgeCore"
+tenant_type: "enterprise"
+status: "operational"
+location:
+  lng: -111.619588
+  lat: 33.3441489
+address: "3856 South Everton Terrace, Mesa, AZ"
+city: "Mesa"
+state: "AZ"
+confidence: "low"
+last_verified: "2026-05-13"
+sources:
+  - url: "https://www.openstreetmap.org/way/808979618"
+    accessed_at: "2026-05-13"
+    supports:
+      - "location"
+      - "name"
+      - "city"
+      - "state"

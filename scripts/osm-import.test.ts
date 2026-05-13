@@ -22,6 +22,7 @@ import {
   normalizeOperator,
   deriveTenantType,
   haversineMeters,
+  normalizeStateCode,
   OPERATOR_ALIASES,
   type OsmElement,
   type NormalizedFacility,
@@ -208,6 +209,11 @@ describe('normalizeOperator', () => {
     expect(normalizeOperator('CoreSite Real Estate 1656 McCarthy, L.P.')).toBe('CoreSite');
     expect(normalizeOperator('Coresite')).toBe('CoreSite');
   });
+
+  // National-pilot alias additions (2026-05-13)
+  it('normalizes Vantage → Vantage Data Centers (national pilot)', () => {
+    expect(normalizeOperator('Vantage')).toBe('Vantage Data Centers');
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -296,10 +302,44 @@ describe('deriveTenantType', () => {
   it('alias: "Dell 350 Holger Way" → Dell', () => {
     expect(normalizeOperator('Dell 350 Holger Way')).toBe('Dell');
   });
+
+  // National-pilot additions (2026-05-13)
+  it('alias: "Vantage" → Vantage Data Centers → colo', () => {
+    expect(deriveTenantType(normalizeOperator('Vantage'))).toBe('colo');
+  });
 });
 
 // ---------------------------------------------------------------------------
-// 4. isWithinConusBbox
+// 4. normalizeStateCode
+// ---------------------------------------------------------------------------
+
+describe('normalizeStateCode', () => {
+  it('passes through 2-letter postal codes unchanged', () => {
+    expect(normalizeStateCode('OH')).toBe('OH');
+    expect(normalizeStateCode('VA')).toBe('VA');
+    expect(normalizeStateCode('CA')).toBe('CA');
+  });
+
+  it('normalizes full state names to postal codes', () => {
+    expect(normalizeStateCode('Ohio')).toBe('OH');
+    expect(normalizeStateCode('Virginia')).toBe('VA');
+    expect(normalizeStateCode('California')).toBe('CA');
+    expect(normalizeStateCode('New York')).toBe('NY');
+    expect(normalizeStateCode('District of Columbia')).toBe('DC');
+  });
+
+  it('trims whitespace before lookup', () => {
+    expect(normalizeStateCode(' Ohio ')).toBe('OH');
+  });
+
+  it('passes through unknown values (foreign countries etc.)', () => {
+    expect(normalizeStateCode('Ontario')).toBe('Ontario');
+    expect(normalizeStateCode('BC')).toBe('BC');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 5. isWithinConusBbox
 // ---------------------------------------------------------------------------
 
 describe('isWithinConusBbox', () => {
