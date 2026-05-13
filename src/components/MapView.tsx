@@ -45,21 +45,75 @@ function isTouchDevice(): boolean {
   return hoverNone || hasTouch;
 }
 
+// Visual treatment per confidence level. Emerald = operator-disclosed primary,
+// amber = derived or trade-press, gray = thin/aggregator-only. Inline styles to
+// avoid coupling the tooltip HTML to the project's Tailwind layer.
+const CONFIDENCE_STYLES: Record<
+  Facility['confidence'],
+  { bg: string; border: string; fg: string }
+> = {
+  high: { bg: '#064e3b', border: '#10b981', fg: '#d1fae5' }, // emerald
+  medium: { bg: '#78350f', border: '#f59e0b', fg: '#fef3c7' }, // amber
+  low: { bg: '#374151', border: '#6b7280', fg: '#d1d5db' }, // gray
+};
+
+const REPO_NEW_ISSUE = 'https://github.com/zzulanas/usdatacenterwatch/issues/new';
+
+function issueLinkFor(f: Facility): string {
+  // Pre-fill the GH issue template with this facility's slug + name. The
+  // ?template= param selects facility-correction.md; ?title= + ?body= override
+  // the template defaults so curators see the right slug already filled in.
+  const title = `[data]: ${f.slug}`;
+  const body = [
+    `**Facility slug:** \`${f.slug}\``,
+    `**Facility name:** ${f.name}`,
+    '',
+    `**What's wrong, missing, or stale?**`,
+    '',
+    `**Source(s) supporting the correction:**`,
+    `- URL: `,
+    `- Accessed: `,
+    `- Which fields it backs: `,
+    '',
+    `**Additional context:**`,
+  ].join('\n');
+  const params = new URLSearchParams({
+    template: 'facility-correction.md',
+    title,
+    body,
+  });
+  return `${REPO_NEW_ISSUE}?${params.toString()}`;
+}
+
 function buildTooltip(info: PickingInfo, isTouch: boolean): { html: string; style: object } | null {
   if (!info.object) return null;
   const f = info.object as Facility;
+
+  const conf = CONFIDENCE_STYLES[f.confidence];
+  const confidencePill = `<span class="tooltip-confidence" style="display:inline-block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;background:${conf.bg};border:1px solid ${conf.border};color:${conf.fg};padding:1px 6px;border-radius:9999px;margin-left:6px;vertical-align:middle;">${f.confidence}</span>`;
+
   const sourceLine = f.source_url
     ? isTouch
       ? `<a class="tooltip-source" href="${f.source_url}" target="_blank" rel="noopener noreferrer">Source ↗</a>`
       : `<p class="tooltip-source">Click for source ↗</p>`
     : `<p class="tooltip-source">(no source URL)</p>`;
+
+  // Mobile-only: a direct "report data issue" link, pre-filled with the
+  // facility slug + name. Desktop users get this affordance from USD-22's
+  // side panel (deck.gl tooltip auto-dismisses with the mouse, so an in-
+  // tooltip link is unreachable with a pointer device).
+  const issueLine = isTouch
+    ? `<a class="tooltip-issue" href="${issueLinkFor(f)}" target="_blank" rel="noopener noreferrer" style="color:#9ca3af;font-size:11px;text-decoration:underline;text-decoration-style:dotted;">Report data issue ↗</a>`
+    : '';
+
   return {
     html: `
       <div class="tooltip-inner">
-        <p class="tooltip-name">${f.name}</p>
+        <p class="tooltip-name">${f.name}${confidencePill}</p>
         <p class="tooltip-operator">${f.operator}</p>
         <p class="tooltip-mw"><span class="tooltip-mw-num">${f.mw.toLocaleString()}</span> MW</p>
         ${sourceLine}
+        ${issueLine}
       </div>
     `,
     style: {
@@ -70,9 +124,9 @@ function buildTooltip(info: PickingInfo, isTouch: boolean): { html: string; styl
       fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
       fontSize: '12px',
       color: '#f3f4f6',
-      maxWidth: '220px',
+      maxWidth: '240px',
       lineHeight: '1.6',
-      // Touch: tooltip becomes interactive so the <a> link captures taps.
+      // Touch: tooltip becomes interactive so the <a> links capture taps.
       // Pointer: keep deck.gl's default (none) so the tooltip can't eat hover
       // events from neighboring dots.
       ...(isTouch ? { pointerEvents: 'auto' } : {}),
