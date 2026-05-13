@@ -140,6 +140,32 @@ export const OPERATOR_ALIASES: Record<string, string> = {
   'American Telephone & Telegraph': 'AT&T',
   'PG&E Datacenter': 'PG&E',
   'Dell 350 Holger Way': 'Dell',
+  // National-pilot additions (verified from OSM data, 2026-05-13):
+  // "Vantage" is OSM shorthand for Vantage Data Centers (colo; multiple US markets)
+  Vantage: 'Vantage Data Centers',
+  // National-pilot name-fallback aliases. OSM mappers commonly include the
+  // facility site code or campus suffix in the operator name when the
+  // `operator` tag is absent ("Aligned Data Centers, LLC"; "Digital Realty
+  // Austin AUS11"). These map back to the canonical company so the
+  // HYPERSCALERS/COLOS lookup succeeds in `deriveTenantType`.
+  'Apple Inc.': 'Apple',
+  'Google LLC': 'Google',
+  'Aligned Data Centers': 'Aligned',
+  'Aligned Data Centers, LLC': 'Aligned',
+  'Aligned Energy Data Center': 'Aligned',
+  'LightEdge Austin II': 'LightEdge',
+  'Lightedge Des Moines 2': 'LightEdge',
+  'DataBank Plano Data Center': 'DataBank',
+  'DataBank Pittsburgh PIT2': 'DataBank',
+  'TierPoint Sioux Falls West Data Center': 'TierPoint',
+  'Digital Realty Austin AUS11': 'Digital Realty',
+  'CoreSite BO1': 'CoreSite',
+  'T5 Data Centers': 'T5',
+  'T5 Data Center': 'T5',
+  'Centersquare Atlanta ATL1': 'Centersquare',
+  'CyrusOne PHX7': 'CyrusOne',
+  'H5 Data Centers': 'H5 Data Centers',
+  'H5 Data Center': 'H5 Data Centers',
 };
 
 // Known hyperscaler operators (post-alias-normalization)
@@ -195,6 +221,10 @@ const COLOS = new Set([
   // hardcoded in that file instead of being driven by this set (the COLOS
   // set is for operator company names only).
   'SV Colo', // Santa Clara colo
+  // National-pilot additions (verified from OSM data, 2026-05-13):
+  'H5 Data Centers', // colo / wholesale; multiple US markets
+  'OVHcloud', // French colo+cloud with US presence (Beauharnois→Hillsboro etc.)
+  'zColo by Zayo', // Zayo's colocation brand
 ]);
 
 // OSM names that imply a single building within a larger campus.
@@ -213,7 +243,88 @@ const BUILDING_NAME_PATTERN = /\b(Building|Block|Phase|Wing|Tower|Bldg|DC)\s*[A-
 const OSM_FALSE_POSITIVE_IDS = new Set<string>([
   'way/300970761', // Golds Gym Ashburn (telecom=data_center applied to a gym)
   'way/30666790', // USPS Terminal Annex Los Angeles (federal mail sorting facility, not a commercial DC)
+  // Canadian data centers in southern Ontario — inside the NY state bbox but outside CONUS.
+  // The CONUS bbox is a lat/lon rectangle that includes southern Canada; these Canadian
+  // records slipped through because OSM elements lack addr:country tags that would let
+  // us distinguish them. Blocked by OSM ID after the national-pilot run (2026-05-13).
+  'way/33186030', // 11:11 Systems, Mississauga, ON
+  'way/302107922', // Equinix TR2, Toronto, ON
+  'way/661951723', // Equinix TR3, Brampton, ON
+  'way/55462937', // EdgeConneX, North York (Toronto), ON
+  'way/28596260', // TELUS, East York (Toronto), ON
+  'way/129730212', // Cologix TOR4, Markham, ON
+  'way/974334074', // Cyxtera, Markham, ON
+  'way/56863431', // Digital Realty YYZ10, Markham, ON
+  'way/661065639', // NuDay Networks, Markham, ON
+  'way/661065569', // Rogers Communications, Markham, ON
 ]);
+
+// ---------------------------------------------------------------------------
+// State name → postal code normalization
+// Some OSM mappers write the full state name in addr:state instead of the
+// 2-letter postal code (e.g. "Ohio" instead of "OH"). We canonicalize so
+// all output uses postal codes, which keeps state directory names consistent
+// (data/facilities/oh/ not data/facilities/ohio/).
+// ---------------------------------------------------------------------------
+
+export const STATE_NAME_TO_CODE: Record<string, string> = {
+  Alabama: 'AL',
+  Alaska: 'AK',
+  Arizona: 'AZ',
+  Arkansas: 'AR',
+  California: 'CA',
+  Colorado: 'CO',
+  Connecticut: 'CT',
+  Delaware: 'DE',
+  Florida: 'FL',
+  Georgia: 'GA',
+  Hawaii: 'HI',
+  Idaho: 'ID',
+  Illinois: 'IL',
+  Indiana: 'IN',
+  Iowa: 'IA',
+  Kansas: 'KS',
+  Kentucky: 'KY',
+  Louisiana: 'LA',
+  Maine: 'ME',
+  Maryland: 'MD',
+  Massachusetts: 'MA',
+  Michigan: 'MI',
+  Minnesota: 'MN',
+  Mississippi: 'MS',
+  Missouri: 'MO',
+  Montana: 'MT',
+  Nebraska: 'NE',
+  Nevada: 'NV',
+  'New Hampshire': 'NH',
+  'New Jersey': 'NJ',
+  'New Mexico': 'NM',
+  'New York': 'NY',
+  'North Carolina': 'NC',
+  'North Dakota': 'ND',
+  Ohio: 'OH',
+  Oklahoma: 'OK',
+  Oregon: 'OR',
+  Pennsylvania: 'PA',
+  'Rhode Island': 'RI',
+  'South Carolina': 'SC',
+  'South Dakota': 'SD',
+  Tennessee: 'TN',
+  Texas: 'TX',
+  Utah: 'UT',
+  Vermont: 'VT',
+  Virginia: 'VA',
+  Washington: 'WA',
+  'West Virginia': 'WV',
+  Wisconsin: 'WI',
+  Wyoming: 'WY',
+  'District of Columbia': 'DC',
+};
+
+/** Normalize addr:state value to a 2-letter postal code when possible */
+export function normalizeStateCode(raw: string): string {
+  return STATE_NAME_TO_CODE[raw.trim()] ?? raw.trim();
+}
 
 // ---------------------------------------------------------------------------
 // Slugify helper — converts arbitrary text to kebab-case safe slug
@@ -341,8 +452,12 @@ export function normalizeOsmElement(
     ? `${operator} ${city}`
     : (rawName ?? `${operator} Data Center`);
 
-  // State: prefer OSM addr:state, fall back to the --state query argument
-  const addrState = tags['addr:state'] ?? queryState;
+  // State: prefer OSM addr:state, fall back to the --state query argument.
+  // Normalize full state names to 2-letter postal codes (e.g. "Ohio" → "OH")
+  // so directory routing and slugs are consistent regardless of how the OSM
+  // mapper tagged addr:state.
+  const rawAddrState = tags['addr:state'];
+  const addrState = rawAddrState ? normalizeStateCode(rawAddrState) : (queryState ?? undefined);
 
   // Build slug: {operator-slug}-{city-slug}-{state-lower}
   const stateSlug = addrState ? addrState.toLowerCase() : '';
@@ -353,11 +468,12 @@ export function normalizeOsmElement(
   // Address only if both housenumber + street are present (sourcing rule)
   const houseNumber = tags['addr:housenumber'];
   const street = tags['addr:street'];
-  // Only include state in address string when we have it from OSM (not inferred from query)
-  const addrStateFromOsm = tags['addr:state'];
+  // Only include state in address string when we have it from OSM (not inferred from query).
+  // Use the normalized postal code (rawAddrState → addrState) so addresses read
+  // "New Albany, OH" rather than "New Albany, Ohio".
   const address =
     houseNumber && street
-      ? `${houseNumber} ${street}, ${city}${addrStateFromOsm ? ', ' + addrStateFromOsm : ''}`
+      ? `${houseNumber} ${street}, ${city}${rawAddrState ? ', ' + addrState : ''}`
       : undefined;
 
   const osmType = element.type as 'way' | 'relation';

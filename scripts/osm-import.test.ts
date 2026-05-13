@@ -22,6 +22,7 @@ import {
   normalizeOperator,
   deriveTenantType,
   haversineMeters,
+  normalizeStateCode,
   OPERATOR_ALIASES,
   type OsmElement,
   type NormalizedFacility,
@@ -208,6 +209,11 @@ describe('normalizeOperator', () => {
     expect(normalizeOperator('CoreSite Real Estate 1656 McCarthy, L.P.')).toBe('CoreSite');
     expect(normalizeOperator('Coresite')).toBe('CoreSite');
   });
+
+  // National-pilot alias additions (2026-05-13)
+  it('normalizes Vantage → Vantage Data Centers (national pilot)', () => {
+    expect(normalizeOperator('Vantage')).toBe('Vantage Data Centers');
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -296,10 +302,107 @@ describe('deriveTenantType', () => {
   it('alias: "Dell 350 Holger Way" → Dell', () => {
     expect(normalizeOperator('Dell 350 Holger Way')).toBe('Dell');
   });
+
+  // National-pilot additions (2026-05-13)
+  it('alias: "Vantage" → Vantage Data Centers → colo', () => {
+    expect(deriveTenantType(normalizeOperator('Vantage'))).toBe('colo');
+  });
+
+  // National-pilot rework: hyperscaler legal-name aliases
+  it('alias: "Apple Inc." → Apple → hyperscaler', () => {
+    expect(deriveTenantType(normalizeOperator('Apple Inc.'))).toBe('hyperscaler');
+  });
+
+  it('alias: "Google LLC" → Google → hyperscaler', () => {
+    expect(deriveTenantType(normalizeOperator('Google LLC'))).toBe('hyperscaler');
+  });
+
+  // National-pilot rework: colo name-fallback aliases (operator field was
+  // facility-name-as-operator in OSM; these aliases canonicalize to the
+  // parent company so COLOS lookup succeeds)
+  it('alias: "Aligned Data Centers" → Aligned → colo', () => {
+    expect(deriveTenantType(normalizeOperator('Aligned Data Centers'))).toBe('colo');
+  });
+
+  it('alias: "Aligned Data Centers, LLC" → Aligned → colo', () => {
+    expect(deriveTenantType(normalizeOperator('Aligned Data Centers, LLC'))).toBe('colo');
+  });
+
+  it('alias: "LightEdge Austin II" → LightEdge → colo', () => {
+    expect(deriveTenantType(normalizeOperator('LightEdge Austin II'))).toBe('colo');
+  });
+
+  it('alias: "DataBank Plano Data Center" → DataBank → colo', () => {
+    expect(deriveTenantType(normalizeOperator('DataBank Plano Data Center'))).toBe('colo');
+  });
+
+  it('alias: "Digital Realty Austin AUS11" → Digital Realty → colo', () => {
+    expect(deriveTenantType(normalizeOperator('Digital Realty Austin AUS11'))).toBe('colo');
+  });
+
+  it('alias: "CoreSite BO1" → CoreSite → colo', () => {
+    expect(deriveTenantType(normalizeOperator('CoreSite BO1'))).toBe('colo');
+  });
+
+  it('alias: "T5 Data Centers" → T5 → colo', () => {
+    expect(deriveTenantType(normalizeOperator('T5 Data Centers'))).toBe('colo');
+  });
+
+  it('alias: "CyrusOne PHX7" → CyrusOne → colo', () => {
+    expect(deriveTenantType(normalizeOperator('CyrusOne PHX7'))).toBe('colo');
+  });
+
+  it('alias: "TierPoint Sioux Falls West Data Center" → TierPoint → colo', () => {
+    expect(deriveTenantType(normalizeOperator('TierPoint Sioux Falls West Data Center'))).toBe(
+      'colo'
+    );
+  });
+
+  // New COLOS entries (not aliased; recognized directly)
+  it('colo for H5 Data Centers', () => {
+    expect(deriveTenantType('H5 Data Centers')).toBe('colo');
+  });
+
+  it('colo for OVHcloud', () => {
+    expect(deriveTenantType('OVHcloud')).toBe('colo');
+  });
+
+  it('colo for zColo by Zayo', () => {
+    expect(deriveTenantType('zColo by Zayo')).toBe('colo');
+  });
 });
 
 // ---------------------------------------------------------------------------
-// 4. isWithinConusBbox
+// 4. normalizeStateCode
+// ---------------------------------------------------------------------------
+
+describe('normalizeStateCode', () => {
+  it('passes through 2-letter postal codes unchanged', () => {
+    expect(normalizeStateCode('OH')).toBe('OH');
+    expect(normalizeStateCode('VA')).toBe('VA');
+    expect(normalizeStateCode('CA')).toBe('CA');
+  });
+
+  it('normalizes full state names to postal codes', () => {
+    expect(normalizeStateCode('Ohio')).toBe('OH');
+    expect(normalizeStateCode('Virginia')).toBe('VA');
+    expect(normalizeStateCode('California')).toBe('CA');
+    expect(normalizeStateCode('New York')).toBe('NY');
+    expect(normalizeStateCode('District of Columbia')).toBe('DC');
+  });
+
+  it('trims whitespace before lookup', () => {
+    expect(normalizeStateCode(' Ohio ')).toBe('OH');
+  });
+
+  it('passes through unknown values (foreign countries etc.)', () => {
+    expect(normalizeStateCode('Ontario')).toBe('Ontario');
+    expect(normalizeStateCode('BC')).toBe('BC');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 5. isWithinConusBbox
 // ---------------------------------------------------------------------------
 
 describe('isWithinConusBbox', () => {
