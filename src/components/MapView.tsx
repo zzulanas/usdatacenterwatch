@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import maplibregl, { type IControl as MaplibreIControl } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { MapboxOverlay } from '@deck.gl/mapbox';
@@ -8,6 +8,7 @@ import { facilityRadius, type Facility } from '@/data/facilities';
 import { loadFacilities, type FacilityForMap } from '@/lib/load-facilities';
 import { CONFIDENCE_STYLES } from '@/lib/pills';
 import { facilityIssueLink } from '@/lib/format';
+import { FacilityPanel } from '@/components/FacilityPanel';
 
 // Carto Dark Matter: free basemap with state lines, county lines, roads, and place labels.
 // Dark-themed — matches our civic/journalistic aesthetic. Attribution required per Carto TOS.
@@ -81,12 +82,14 @@ const STATUS_LABELS: Record<string, string> = {
  * The deck.gl tooltip is hover-only on desktop and auto-dismisses when the
  * cursor leaves the picked object. That makes any <a> tag inside unreachable
  * with a mouse — so on pointer devices the tooltip shows informational text
- * and the dot's onClick handler opens the source URL.
+ * and the dot's onClick handler opens the side panel.
  *
  * On touch devices there is no hover: a tap shows the tooltip AND the tooltip
  * stays "pinned" until the next tap moves the pick off the object. That makes
- * a live <a> link inside the tooltip the better UX (the dot's onClick would
- * yank the user straight to the source before they read what they tapped).
+ * a live <a> link inside the tooltip the better UX for touch users; however,
+ * we also open the panel on tap because a tap fires onClick on deck.gl. Both
+ * the panel open and the pinned tooltip fire — the panel wins visually since
+ * it sits on top of the map at z-20.
  *
  * We pick once per session by sniffing CSS hover capability + touch presence.
  */
@@ -132,12 +135,10 @@ function buildTooltip(info: PickingInfo, isTouch: boolean): { html: string; styl
 
   // Detail-page link: on touch, the tooltip carries a real <a> the user can
   // tap (deck.gl pins the tooltip after tap, so an inline anchor is
-  // reachable). On desktop, the dot's onClick navigates the page — we just
-  // render an affordance hint here. Both routes land on the same SSG'd
-  // /facility/[slug] page from USD-21.
-  const detailHref = `/facility/${f.slug}`;
+  // reachable). On desktop, the dot's onClick opens the side panel — we just
+  // render an affordance hint here.
   const detailLine = isTouch
-    ? `<a class="tooltip-detail" href="${detailHref}" style="color:#4fd1c5;font-weight:600;text-decoration:none;">View details →</a>`
+    ? `<a class="tooltip-detail" href="/facility/${f.slug}" style="color:#4fd1c5;font-weight:600;text-decoration:none;">View details →</a>`
     : `<p class="tooltip-detail" style="color:#4fd1c5;font-weight:600;">Click for details →</p>`;
 
   // Source URL link (secondary affordance — the primary action is now the
@@ -149,8 +150,7 @@ function buildTooltip(info: PickingInfo, isTouch: boolean): { html: string; styl
       : '';
 
   // Mobile-only: a direct "report data issue" link, pre-filled with the
-  // facility slug + name. Desktop users get this affordance via the
-  // detail page's "Suggest a correction" button.
+  // facility slug + name. Desktop users get this affordance via the panel.
   const issueLine = isTouch
     ? `<a class="tooltip-issue" href="${issueLinkFor(f)}" target="_blank" rel="noopener noreferrer" style="color:#9ca3af;font-size:11px;text-decoration:underline;text-decoration-style:dotted;">Report data issue ↗</a>`
     : '';
@@ -189,6 +189,31 @@ function MapView() {
   const mapRef = useRef<maplibregl.Map | null>(null);
   const overlayRef = useRef<MapboxOverlay | null>(null);
   const [facilities, setFacilities] = useState<FacilityForMap[]>([]);
+  const [selectedFacility, setSelectedFacility] = useState<FacilityForMap | null>(null);
+
+  // selectedFacilityRef keeps the deck.gl onClick callback in sync without
+  // requiring the layer to be rebuilt on each selection change.
+  const selectedFacilityRef = useRef<FacilityForMap | null>(null);
+  selectedFacilityRef.current = selectedFacility;
+
+  // facilitiesRef keeps the popstate handler in sync with loaded facilities.
+  const facilitiesRef = useRef<FacilityForMap[]>([]);
+  facilitiesRef.current = facilities;
+
+  // Open a facility panel: set state, push URL, fly map to location.
+  const openPanel = useCallback((f: FacilityForMap) => {
+    setSelectedFacility(f);
+    window.history.pushState({ slug: f.slug }, '', `/?f=${f.slug}`);
+    if (mapRef.current) {
+      mapRef.current.flyTo({ center: [f.lng, f.lat], zoom: 9, duration: 1000 });
+    }
+  }, []);
+
+  // Close the panel: clear state, revert URL.
+  const closePanel = useCallback(() => {
+    setSelectedFacility(null);
+    window.history.pushState({}, '', '/');
+  }, []);
 
   // Load facilities from R2 (or fall back to seed data) on mount.
   // `cancelled` guards against setState after unmount if the user navigates
@@ -205,6 +230,56 @@ function MapView() {
     return () => {
       cancelled = true;
     };
+  }, []);
+
+  // On mount: read ?f=slug from URL and pre-open the panel if present.
+  // This runs once; openPanel calls flyTo which needs the map to be ready,
+  // so we defer via a small loop until mapRef is populated.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const slug = params.get('f');
+    if (!slug) return;
+
+    // Poll until both map and facilities are ready (map init is async).
+    let attempts = 0;
+    const maxAttempts = 40; // 4s at 100ms polling
+    const poll = setInterval(() => {
+      attempts++;
+      const facs = facilitiesRef.current;
+      const map = mapRef.current;
+      if (facs.length > 0 && map) {
+        clearInterval(poll);
+        const target = facs.find((f) => f.slug === slug);
+        if (target) {
+          setSelectedFacility(target);
+          map.flyTo({ center: [target.lng, target.lat], zoom: 9, duration: 1000 });
+        }
+      } else if (attempts >= maxAttempts) {
+        clearInterval(poll);
+      }
+    }, 100);
+
+    return () => clearInterval(poll);
+  }, []);
+
+  // Browser back/forward: sync panel state with the history entry.
+  useEffect(() => {
+    function handlePopState(e: PopStateEvent) {
+      const state = e.state as { slug?: string } | null;
+      if (state?.slug) {
+        const target = facilitiesRef.current.find((f) => f.slug === state.slug);
+        if (target) {
+          setSelectedFacility(target);
+          if (mapRef.current) {
+            mapRef.current.flyTo({ center: [target.lng, target.lat], zoom: 9, duration: 600 });
+          }
+        }
+      } else {
+        setSelectedFacility(null);
+      }
+    }
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
   // Detected once at mount; affects both tooltip rendering and onClick wiring.
@@ -275,7 +350,9 @@ function MapView() {
     };
   }, []);
 
-  // Update the deck.gl layer whenever facilities data changes
+  // Update the deck.gl layer whenever facilities data changes.
+  // openPanel is stable (useCallback with no deps), so including it here
+  // doesn't cause unnecessary layer rebuilds.
   useEffect(() => {
     if (!overlayRef.current) return;
 
@@ -300,29 +377,30 @@ function MapView() {
       radiusMinPixels: 8,
       opacity: 0.7,
       pickable: true,
-      // Desktop: navigate to the facility detail page (the SSG'd page from
-      // USD-21). Mobile: leave onClick unset — tapping a dot pins the
-      // tooltip whose "View details →" anchor handles the navigation.
-      // USD-22 will replace this with an in-place side panel + URL state.
-      onClick: isTouchRef.current
-        ? undefined
-        : ({ object }) => {
-            const f = object as Facility | undefined;
-            if (!f?.slug) return;
-            window.location.href = `/facility/${f.slug}`;
-          },
+      // Both desktop and touch: clicking/tapping a dot opens the side panel.
+      // On touch, the tooltip also pins — the panel sits at z-20 and wins
+      // visually. The "View details →" link in the tooltip gives touch users
+      // an alternative navigation path to the standalone detail page.
+      onClick: ({ object }) => {
+        const f = object as FacilityForMap | undefined;
+        if (!f?.slug) return;
+        openPanel(f);
+      },
     });
 
     overlayRef.current.setProps({ layers: [layer] });
-  }, [facilities]);
+  }, [facilities, openPanel]);
 
   return (
-    <div
-      ref={containerRef}
-      className="w-full h-full"
-      data-testid="map-view"
-      aria-label="US Data Center Map"
-    />
+    <div className="relative w-full h-full">
+      <div
+        ref={containerRef}
+        className="w-full h-full"
+        data-testid="map-view"
+        aria-label="US Data Center Map"
+      />
+      <FacilityPanel facility={selectedFacility} onClose={closePanel} />
+    </div>
   );
 }
 
