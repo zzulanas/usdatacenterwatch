@@ -17,6 +17,12 @@
  */
 
 import { SEED_FACILITIES, type Facility } from '@/data/facilities';
+import type {
+  CoolingType,
+  StatusType,
+  TenantType,
+  WaterSourceType,
+} from '@/lib/zod-facility-schema';
 
 // ---------------------------------------------------------------------------
 // Manifest + dataset types (subset of the full R2 dataset shape)
@@ -35,9 +41,9 @@ export interface FacilityFromR2 {
   slug: string;
   name: string;
   operator: string;
-  tenant_type: string;
+  tenant_type: TenantType;
   /** Lifecycle stage — same union as Facility.status; mirrors the Zod enum. */
-  status: 'operational' | 'under_construction' | 'announced' | 'decommissioned';
+  status: StatusType;
   location: { lng: number; lat: number };
   // Derived from location for MapView compat
   lng: number;
@@ -45,6 +51,14 @@ export interface FacilityFromR2 {
   it_load_mw: number | null;
   total_mw: number | null;
   confidence: 'high' | 'medium' | 'low';
+  // Filterable fields: explicitly typed so MapFilters predicates compile against
+  // the schema rather than dipping into the [key:string]:unknown catchall. These
+  // are optional in the Zod schema (some YAML records lack them); MapFilters
+  // handles undefined as "no value".
+  cooling_type?: CoolingType | null;
+  year_built?: number | null;
+  state?: string | null;
+  water_source?: WaterSourceType | null;
   sources: Array<{ url: string; accessed_at: string; supports: string[] }>;
   estimate: {
     methodology_version: string;
@@ -64,11 +78,17 @@ export interface FacilityFromR2 {
 /** Shape returned to callers — compatible with MapView Facility */
 export interface FacilityForMap extends Facility {
   // Extra fields available when loaded from R2 (undefined when using seed data)
-  tenant_type?: string;
+  tenant_type?: TenantType;
   // `status` is already on Facility but typed as a narrow union there; this
   // alias keeps the field discoverable on the R2-side type without widening.
   status?: Facility['status'];
   estimate?: FacilityFromR2['estimate'];
+  // Filterable fields — same explicit typing as FacilityFromR2 so MapFilters
+  // and other consumers can read them without an `as unknown as` cast.
+  cooling_type?: CoolingType | null;
+  year_built?: number | null;
+  state?: string | null;
+  water_source?: WaterSourceType | null;
 }
 
 // ---------------------------------------------------------------------------
