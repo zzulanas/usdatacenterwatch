@@ -130,16 +130,27 @@ function buildTooltip(info: PickingInfo, isTouch: boolean): { html: string; styl
   const confidencePill = `<span class="tooltip-confidence" style="display:inline-block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;background:${conf.bg};border:1px solid ${conf.border};color:${conf.fg};padding:1px 6px;border-radius:9999px;margin-left:6px;vertical-align:middle;"><span style="opacity:0.7;font-weight:500;">confidence:</span> ${f.confidence}</span>`;
   const statusPill = statusPillHtml(f.status);
 
-  const sourceLine = f.source_url
-    ? isTouch
-      ? `<a class="tooltip-source" href="${f.source_url}" target="_blank" rel="noopener noreferrer">Source ↗</a>`
-      : `<p class="tooltip-source">Click for source ↗</p>`
-    : `<p class="tooltip-source">(no source URL)</p>`;
+  // Detail-page link: on touch, the tooltip carries a real <a> the user can
+  // tap (deck.gl pins the tooltip after tap, so an inline anchor is
+  // reachable). On desktop, the dot's onClick navigates the page — we just
+  // render an affordance hint here. Both routes land on the same SSG'd
+  // /facility/[slug] page from USD-21.
+  const detailHref = `/facility/${f.slug}`;
+  const detailLine = isTouch
+    ? `<a class="tooltip-detail" href="${detailHref}" style="color:#4fd1c5;font-weight:600;text-decoration:none;">View details →</a>`
+    : `<p class="tooltip-detail" style="color:#4fd1c5;font-weight:600;">Click for details →</p>`;
+
+  // Source URL link (secondary affordance — the primary action is now the
+  // detail page above). Render only on touch where the user can actually
+  // reach the anchor.
+  const sourceLine =
+    isTouch && f.source_url
+      ? `<a class="tooltip-source" href="${f.source_url}" target="_blank" rel="noopener noreferrer" style="color:#9ca3af;font-size:11px;text-decoration:underline;text-decoration-style:dotted;">Source ↗</a>`
+      : '';
 
   // Mobile-only: a direct "report data issue" link, pre-filled with the
-  // facility slug + name. Desktop users get this affordance from USD-22's
-  // side panel (deck.gl tooltip auto-dismisses with the mouse, so an in-
-  // tooltip link is unreachable with a pointer device).
+  // facility slug + name. Desktop users get this affordance via the
+  // detail page's "Suggest a correction" button.
   const issueLine = isTouch
     ? `<a class="tooltip-issue" href="${issueLinkFor(f)}" target="_blank" rel="noopener noreferrer" style="color:#9ca3af;font-size:11px;text-decoration:underline;text-decoration-style:dotted;">Report data issue ↗</a>`
     : '';
@@ -150,6 +161,7 @@ function buildTooltip(info: PickingInfo, isTouch: boolean): { html: string; styl
         <p class="tooltip-name">${f.name}${confidencePill}${statusPill}</p>
         <p class="tooltip-operator">${f.operator}</p>
         <p class="tooltip-mw"><span class="tooltip-mw-num">${f.mw.toLocaleString()}</span> MW</p>
+        ${detailLine}
         ${sourceLine}
         ${issueLine}
       </div>
@@ -288,17 +300,16 @@ function MapView() {
       radiusMinPixels: 8,
       opacity: 0.7,
       pickable: true,
-      // Interim: on pointer devices, clicking a dot opens the cited source URL
-      // in a new tab (the deck.gl tooltip auto-dismisses on mouseleave so the
-      // <a> inside is unreachable with a mouse). On touch devices we leave
-      // onClick unset — tapping a dot shows a pinned tooltip whose <a> link
-      // captures the next tap. USD-22's side-panel + URL state replaces both.
+      // Desktop: navigate to the facility detail page (the SSG'd page from
+      // USD-21). Mobile: leave onClick unset — tapping a dot pins the
+      // tooltip whose "View details →" anchor handles the navigation.
+      // USD-22 will replace this with an in-place side panel + URL state.
       onClick: isTouchRef.current
         ? undefined
         : ({ object }) => {
             const f = object as Facility | undefined;
-            if (!f?.source_url) return;
-            window.open(f.source_url, '_blank', 'noopener,noreferrer');
+            if (!f?.slug) return;
+            window.location.href = `/facility/${f.slug}`;
           },
     });
 
