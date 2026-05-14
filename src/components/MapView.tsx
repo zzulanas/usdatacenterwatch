@@ -6,6 +6,8 @@ import { ScatterplotLayer } from '@deck.gl/layers';
 import { type PickingInfo } from '@deck.gl/core';
 import { facilityRadius, type Facility } from '@/data/facilities';
 import { loadFacilities, type FacilityForMap } from '@/lib/load-facilities';
+import { CONFIDENCE_STYLES } from '@/lib/pills';
+import { facilityIssueLink } from '@/lib/format';
 
 // Carto Dark Matter: free basemap with state lines, county lines, roads, and place labels.
 // Dark-themed — matches our civic/journalistic aesthetic. Attribution required per Carto TOS.
@@ -95,44 +97,13 @@ function isTouchDevice(): boolean {
   return hoverNone || hasTouch;
 }
 
-// Visual treatment per confidence level. Emerald = operator-disclosed primary,
-// amber = derived or trade-press, gray = thin/aggregator-only. Inline styles to
-// avoid coupling the tooltip HTML to the project's Tailwind layer.
-const CONFIDENCE_STYLES: Record<
-  Facility['confidence'],
-  { bg: string; border: string; fg: string }
-> = {
-  high: { bg: '#064e3b', border: '#10b981', fg: '#d1fae5' }, // emerald
-  medium: { bg: '#78350f', border: '#f59e0b', fg: '#fef3c7' }, // amber
-  low: { bg: '#374151', border: '#6b7280', fg: '#d1d5db' }, // gray
-};
+// CONFIDENCE_STYLES is imported from @/lib/pills — shared with the facility detail page.
+// The inline-style approach avoids coupling tooltip HTML to the Tailwind layer.
 
-const REPO_NEW_ISSUE = 'https://github.com/zzulanas/usdatacenterwatch/issues/new';
-
+// issueLinkFor is now provided by facilityIssueLink from @/lib/format.
+// Kept as a thin wrapper so the tooltip code below reads naturally.
 function issueLinkFor(f: Facility): string {
-  // Pre-fill the GH issue template with this facility's slug + name. The
-  // ?template= param selects facility-correction.md; ?title= + ?body= override
-  // the template defaults so curators see the right slug already filled in.
-  const title = `[data]: ${f.slug}`;
-  const body = [
-    `**Facility slug:** \`${f.slug}\``,
-    `**Facility name:** ${f.name}`,
-    '',
-    `**What's wrong, missing, or stale?**`,
-    '',
-    `**Source(s) supporting the correction:**`,
-    `- URL: `,
-    `- Accessed: `,
-    `- Which fields it backs: `,
-    '',
-    `**Additional context:**`,
-  ].join('\n');
-  const params = new URLSearchParams({
-    template: 'facility-correction.md',
-    title,
-    body,
-  });
-  return `${REPO_NEW_ISSUE}?${params.toString()}`;
+  return facilityIssueLink(f.slug, f.name);
 }
 
 // Status pill uses the same dot color palette so the two affordances visually

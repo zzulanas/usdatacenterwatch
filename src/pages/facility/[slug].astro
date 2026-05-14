@@ -1,23 +1,480 @@
 ---
+/**
+ * /facility/[slug] — static detail page for each facility.
+ *
+ * Out of scope (separate tickets):
+ *   USD-21.1 — embedded mini-map
+ *   USD-21.2 — related facilities by operator/county
+ *   USD-31   — subsidies section (depends on M4)
+ *   OG image generation (satori/vercel-og integration)
+ *   Hybrid SSR mode (page is fully prerendered at build time)
+ */
+import yaml from 'yaml';
 import Layout from '@/components/Layout.astro';
+import { FacilityYamlSchema } from '@/lib/zod-facility-schema';
+import type { FacilityYaml } from '@/lib/zod-facility-schema';
+import { computeEstimates } from '../../../scripts/ingest/estimates.ts';
+import {
+  CONFIDENCE_STYLES,
+  confidencePillStyle,
+  statusPillStyle,
+  statusLabel,
+} from '@/lib/pills';
+import { formatCapex, formatGwh, formatGallons, facilityIssueLink } from '@/lib/format';
 
-// Static build: no facilities loaded yet — stub routes only.
-// USD-8 (ingest pipeline) will populate data/facilities/ and generate real paths.
-// The `test-slug` entry exists solely for E2E smoke testing the route template.
-export function getStaticPaths() {
-  return [{ params: { slug: 'test-slug' } }];
+// ---------------------------------------------------------------------------
+// getStaticPaths — enumerate all YAML files at build time
+// ---------------------------------------------------------------------------
+
+type StaticPath = {
+  params: { slug: string };
+  props: { facility: FacilityYaml | null };
+};
+
+export function getStaticPaths(): StaticPath[] {
+  // `?raw` prevents Vite from trying to parse YAML as JS modules.
+  // `eager: true` resolves the map synchronously (required in getStaticPaths).
+  const yamlFiles = import.meta.glob('/data/facilities/*/*.yaml', {
+    eager: true,
+    query: '?raw',
+    import: 'default',
+  }) as Record<string, string>;
+
+  const paths: StaticPath[] = Object.entries(yamlFiles).flatMap(([, raw]) => {
+    const result = FacilityYamlSchema.safeParse(yaml.parse(raw));
+    if (!result.success) return [];
+    const facility = result.data;
+    return [{ params: { slug: facility.slug }, props: { facility } }];
+  });
+
+  // Keep the test-slug stub so existing E2E tests don't break.
+  // It's a harmless extra route that produces a plain stub page.
+  const hasTestSlug = paths.some((p) => p.params.slug === 'test-slug');
+  if (!hasTestSlug) {
+    paths.push({ params: { slug: 'test-slug' }, props: { facility: null } });
+  }
+
+  return paths;
 }
 
+// ---------------------------------------------------------------------------
+// Page props and derived data
+// ---------------------------------------------------------------------------
+
+interface Props {
+  facility: FacilityYaml | null;
+}
+
+const { facility } = Astro.props;
 const { slug } = Astro.params;
+
+// Stub path — render bare placeholder (e2e smoke test target)
+if (!facility) {
+  // Astro's JSX-style early returns work in frontmatter via the response object
+  // but the cleanest approach for a stub is just to let the template below
+  // branch on `facility == null`.
+}
+
+const estimates = facility ? computeEstimates(facility) : null;
+
+// ---------------------------------------------------------------------------
+// Formatting helpers scoped to this page
+// ---------------------------------------------------------------------------
+
+/** Format a number with comma separators. */
+function fmt(n: number, decimals = 0): string {
+  return n.toLocaleString('en-US', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  });
+}
+
+// Build location string: "Address · City, State" or subset if fields missing
+function locationLine(f: FacilityYaml): string {
+  const parts: string[] = [];
+  if (f.address) parts.push(f.address);
+  else {
+    const cityState = [f.city, f.state].filter(Boolean).join(', ');
+    if (cityState) parts.push(cityState);
+  }
+  return parts.join(' · ');
+}
+
+// Sub-headline: "City, State" (for address lines that already repeat it we
+// fall back to just state)
+function cityState(f: FacilityYaml): string {
+  return [f.city, f.state].filter(Boolean).join(', ');
+}
+
+// Meta description string
+function metaDescription(f: FacilityYaml): string {
+  const loc = cityState(f) || f.state || 'United States';
+  const mwPart = f.it_load_mw ? `${f.it_load_mw} MW` : '';
+  const gwhPart = estimates
+    ? `${formatGwh(estimates.estimated_annual_gwh)} GWh/yr electricity`
+    : '';
+  const parts = [
+    `${f.operator}'s data center${mwPart ? ` (${mwPart})` : ''} in ${loc}.`,
+    gwhPart ? `Modeled ${gwhPart}.` : '',
+    'Source data and methodology at US Data Center Watch.',
+  ].filter(Boolean);
+  return parts.join(' ');
+}
+
+// Canonical page URL — used in OG tags
+const canonicalUrl = `https://usdatacenterwatch.pages.dev/facility/${slug}`;
+
+// Issue link for the "Suggest a correction" button
+const issueLink = facility ? facilityIssueLink(facility.slug, facility.name) : '#';
+
+// ---------------------------------------------------------------------------
+// Pill CSS objects → Astro wants string or object, so cast to CSSStyleDeclaration
+// ---------------------------------------------------------------------------
+// We pass inline style objects; Astro renders them correctly from plain records.
+const confStyle = facility ? confidencePillStyle(facility.confidence) : null;
+const confLabel = facility ? CONFIDENCE_STYLES[facility.confidence].label : '';
+const statStyle = facility ? statusPillStyle(facility.status) : null;
+const statLabel = facility ? statusLabel(facility.status) : '';
 ---
 
-<Layout title={`${slug} — US Data Center Watch`}>
-  <div class="max-w-3xl mx-auto px-4 py-12">
-    <h1 class="text-2xl font-semibold text-neutral-100">
-      Facility: <code class="font-mono text-neutral-400">{slug}</code>
-    </h1>
-    <p class="mt-4 text-neutral-400 text-sm">
-      Facility detail page — data pipeline and full panel coming in USD-10+.
-    </p>
-  </div>
-</Layout>
+{facility ? (
+  <Layout
+    title={`${facility.name} — US Data Center Watch`}
+    description={metaDescription(facility)}
+  >
+    <!-- OG / SEO meta (supplement Layout's default description) -->
+    <Fragment slot="head">
+      <meta property="og:title" content={`${facility.name} — US Data Center Watch`} />
+      <meta property="og:description" content={metaDescription(facility)} />
+      <meta property="og:type" content="website" />
+      <meta property="og:url" content={canonicalUrl} />
+    </Fragment>
+
+    <div class="max-w-3xl mx-auto px-4 py-10 text-neutral-200">
+
+      <!-- ---------------------------------------------------------------- -->
+      <!-- 1. Hero                                                           -->
+      <!-- ---------------------------------------------------------------- -->
+      <section>
+        <!-- Breadcrumb -->
+        <nav class="text-xs text-neutral-500 mb-4">
+          <a href="/" class="hover:text-neutral-300 transition-colors">Map</a>
+          <span class="mx-1">›</span>
+          <span>{facility.state ?? 'US'}</span>
+          <span class="mx-1">›</span>
+          <span class="text-neutral-300">{facility.slug}</span>
+        </nav>
+
+        <!-- Name + pills -->
+        <h1 class="text-2xl font-semibold text-neutral-100 leading-snug">
+          {facility.name}
+          {statStyle && (
+            <span
+              class="ml-2 align-middle"
+              style={statStyle}
+              title={statLabel}
+            >
+              {statLabel}
+            </span>
+          )}
+        </h1>
+
+        <!-- Operator + confidence -->
+        <p class="mt-1 text-sm text-neutral-400">
+          {facility.operator}
+          {confStyle && (
+            <span
+              class="ml-2 align-middle"
+              style={confStyle}
+              title={confLabel}
+            >
+              {confLabel}
+            </span>
+          )}
+        </p>
+
+        <!-- Address line -->
+        {locationLine(facility) && (
+          <p class="mt-2 text-sm text-neutral-500 font-mono">{locationLine(facility)}</p>
+        )}
+        {facility.address && cityState(facility) && (
+          <p class="text-sm text-neutral-500">{cityState(facility)}</p>
+        )}
+
+        <!-- Big-numbers row -->
+        <div class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <!-- IT load MW -->
+          <div class="rounded-md border border-neutral-800 bg-neutral-900 px-4 py-3">
+            <p class="text-xs text-neutral-500 uppercase font-mono tracking-wide">IT Load</p>
+            <p class="mt-1 text-2xl font-semibold text-neutral-100 font-mono">
+              {facility.it_load_mw != null ? fmt(facility.it_load_mw) : '—'}
+            </p>
+            <p class="text-xs text-neutral-500">MW</p>
+          </div>
+
+          <!-- Modeled GWh/yr -->
+          <div class="rounded-md border border-neutral-800 bg-neutral-900 px-4 py-3">
+            <p class="text-xs text-neutral-500 uppercase font-mono tracking-wide">Electricity</p>
+            {estimates ? (
+              <>
+                <p class="mt-1 text-2xl font-semibold text-neutral-100 font-mono">
+                  {formatGwh(estimates.estimated_annual_gwh)}
+                </p>
+                <p class="text-xs text-neutral-500">GWh/yr <span class="text-neutral-600">(modeled)</span></p>
+                <p class="text-xs text-neutral-600 mt-0.5">
+                  {formatGwh(estimates.estimated_annual_gwh_low)}–{formatGwh(estimates.estimated_annual_gwh_high)}
+                </p>
+              </>
+            ) : (
+              <>
+                <p class="mt-1 text-2xl font-semibold text-neutral-600 font-mono">—</p>
+                <p class="text-xs text-neutral-600">GWh/yr</p>
+              </>
+            )}
+          </div>
+
+          <!-- Modeled gallons/yr -->
+          <div class="rounded-md border border-neutral-800 bg-neutral-900 px-4 py-3">
+            <p class="text-xs text-neutral-500 uppercase font-mono tracking-wide">Water</p>
+            {estimates ? (
+              <>
+                <p class="mt-1 text-2xl font-semibold text-neutral-100 font-mono">
+                  {formatGallons(estimates.estimated_annual_gallons)}
+                </p>
+                <p class="text-xs text-neutral-500">gal/yr <span class="text-neutral-600">(modeled)</span></p>
+                <p class="text-xs text-neutral-600 mt-0.5">
+                  {formatGallons(estimates.estimated_annual_gallons_low)}–{formatGallons(estimates.estimated_annual_gallons_high)}
+                </p>
+              </>
+            ) : (
+              <>
+                <p class="mt-1 text-2xl font-semibold text-neutral-600 font-mono">—</p>
+                <p class="text-xs text-neutral-600">gal/yr</p>
+              </>
+            )}
+          </div>
+
+          <!-- Acres (when present); otherwise sqft; otherwise empty slot -->
+          {facility.acres != null ? (
+            <div class="rounded-md border border-neutral-800 bg-neutral-900 px-4 py-3">
+              <p class="text-xs text-neutral-500 uppercase font-mono tracking-wide">Site</p>
+              <p class="mt-1 text-2xl font-semibold text-neutral-100 font-mono">
+                {fmt(facility.acres)}
+              </p>
+              <p class="text-xs text-neutral-500">acres</p>
+              {facility.sqft != null && (
+                <p class="text-xs text-neutral-600 mt-0.5">{fmt(facility.sqft)} sqft</p>
+              )}
+            </div>
+          ) : facility.sqft != null ? (
+            <div class="rounded-md border border-neutral-800 bg-neutral-900 px-4 py-3">
+              <p class="text-xs text-neutral-500 uppercase font-mono tracking-wide">Floor area</p>
+              <p class="mt-1 text-2xl font-semibold text-neutral-100 font-mono">
+                {fmt(facility.sqft)}
+              </p>
+              <p class="text-xs text-neutral-500">sqft</p>
+            </div>
+          ) : (
+            <div class="rounded-md border border-neutral-800 bg-neutral-900 px-4 py-3">
+              <p class="text-xs text-neutral-500 uppercase font-mono tracking-wide">Site</p>
+              <p class="mt-1 text-2xl font-semibold text-neutral-600 font-mono">—</p>
+              <p class="text-xs text-neutral-600">acres</p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <!-- ---------------------------------------------------------------- -->
+      <!-- 2. At-a-glance key-value list                                    -->
+      <!-- ---------------------------------------------------------------- -->
+      <section class="mt-8">
+        <h2 class="text-base font-semibold text-neutral-100">At a glance</h2>
+        <dl class="mt-3 divide-y divide-neutral-800 text-sm">
+
+          {facility.tenant_type && (
+            <div class="flex justify-between py-2">
+              <dt class="text-neutral-500">Type</dt>
+              <dd class="text-neutral-100 capitalize">{facility.tenant_type.replace('_', ' ')}</dd>
+            </div>
+          )}
+
+          {facility.status && (
+            <div class="flex justify-between py-2">
+              <dt class="text-neutral-500">Status</dt>
+              <dd class="text-neutral-100 capitalize">{statusLabel(facility.status)}</dd>
+            </div>
+          )}
+
+          {facility.cooling_type != null && (
+            <div class="flex justify-between py-2">
+              <dt class="text-neutral-500">Cooling type</dt>
+              <dd class="text-neutral-100 capitalize">{facility.cooling_type}</dd>
+            </div>
+          )}
+
+          {facility.water_source != null && (
+            <div class="flex justify-between py-2">
+              <dt class="text-neutral-500">Water source</dt>
+              <dd class="text-neutral-100 capitalize">{facility.water_source}</dd>
+            </div>
+          )}
+
+          {facility.year_built != null && (
+            <div class="flex justify-between py-2">
+              <dt class="text-neutral-500">Year built</dt>
+              <dd class="text-neutral-100 font-mono">{facility.year_built}</dd>
+            </div>
+          )}
+
+          {facility.total_mw != null && (
+            <div class="flex justify-between py-2">
+              <dt class="text-neutral-500">Total capacity</dt>
+              <dd class="text-neutral-100 font-mono">{fmt(facility.total_mw)} MW</dd>
+            </div>
+          )}
+
+          {facility.design_pue != null && (
+            <div class="flex justify-between py-2">
+              <dt class="text-neutral-500">Design PUE</dt>
+              <dd class="text-neutral-100 font-mono">{facility.design_pue.toFixed(2)}</dd>
+            </div>
+          )}
+
+          {facility.tenants && facility.tenants.length > 0 && (
+            <div class="flex justify-between py-2">
+              <dt class="text-neutral-500">Tenants</dt>
+              <dd class="text-neutral-100">{facility.tenants.join(', ')}</dd>
+            </div>
+          )}
+
+          {facility.jobs_construction != null && (
+            <div class="flex justify-between py-2">
+              <dt class="text-neutral-500">Construction jobs</dt>
+              <dd class="text-neutral-100 font-mono">{fmt(facility.jobs_construction)}</dd>
+            </div>
+          )}
+
+          {facility.jobs_permanent != null && (
+            <div class="flex justify-between py-2">
+              <dt class="text-neutral-500">Permanent jobs</dt>
+              <dd class="text-neutral-100 font-mono">{fmt(facility.jobs_permanent)}</dd>
+            </div>
+          )}
+
+          {facility.construction_capex_usd != null && (
+            <div class="flex justify-between py-2">
+              <dt class="text-neutral-500">Construction capex</dt>
+              <dd class="text-neutral-100 font-mono">{formatCapex(facility.construction_capex_usd)}</dd>
+            </div>
+          )}
+
+          {facility.reported_annual_mwh != null && (
+            <div class="flex justify-between py-2">
+              <dt class="text-neutral-500">
+                Operator-disclosed electricity
+                {facility.reported_annual_mwh_year && (
+                  <span class="text-neutral-600"> ({facility.reported_annual_mwh_year})</span>
+                )}
+              </dt>
+              <dd class="text-neutral-100 font-mono">
+                {fmt(facility.reported_annual_mwh)} MWh/yr
+              </dd>
+            </div>
+          )}
+
+          {facility.county && (
+            <div class="flex justify-between py-2">
+              <dt class="text-neutral-500">County</dt>
+              <dd class="text-neutral-100">{facility.county}</dd>
+            </div>
+          )}
+
+        </dl>
+      </section>
+
+      <!-- ---------------------------------------------------------------- -->
+      <!-- 3. Sources & methodology                                          -->
+      <!-- ---------------------------------------------------------------- -->
+      <section class="mt-8">
+        <h2 class="text-base font-semibold text-neutral-100">Sources</h2>
+        <ul class="mt-3 space-y-4 text-sm">
+          {facility.sources.map((source) => (
+            <li class="border border-neutral-800 rounded-md px-4 py-3 bg-neutral-900">
+              <a
+                href={source.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-neutral-100 underline decoration-dotted hover:text-neutral-50 break-all"
+              >
+                {source.url}
+              </a>
+              <p class="text-xs text-neutral-500 mt-1">
+                Accessed {source.accessed_at}
+              </p>
+              {source.supports.length > 0 && (
+                <p class="mt-2 flex flex-wrap gap-1">
+                  {source.supports.map((field) => (
+                    <span class="inline-block text-xs font-mono bg-neutral-800 border border-neutral-700 text-neutral-400 px-2 py-0.5 rounded">
+                      {field}
+                    </span>
+                  ))}
+                </p>
+              )}
+            </li>
+          ))}
+        </ul>
+
+        <!-- Methodology footnote -->
+        <div class="mt-4 text-xs text-neutral-500 space-y-1">
+          <p>
+            Energy and water figures are modeled estimates — see the{' '}
+            <a href="/methodology" class="underline decoration-dotted hover:text-neutral-300">
+              methodology page
+            </a>{' '}
+            for the formula, assumptions, and uncertainty ranges.
+          </p>
+          {facility.confidence === 'low' && (
+            <p>
+              This record is marked <strong class="text-neutral-400">low confidence</strong> — it was
+              auto-imported from OpenStreetMap and has not yet been independently verified. Fields
+              like IT load, acreage, and year built may be missing or inaccurate until a curator
+              cross-checks against a primary source.
+            </p>
+          )}
+        </div>
+
+        <!-- Suggest a correction -->
+        <div class="mt-6">
+          <a
+            href={issueLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 rounded-md border border-neutral-700 bg-neutral-900 px-4 py-2 text-sm text-neutral-300 hover:border-neutral-500 hover:text-neutral-100 transition-colors"
+          >
+            Suggest a correction ↗
+          </a>
+        </div>
+      </section>
+
+      <!-- Slug / last-verified footer -->
+      <footer class="mt-10 pt-6 border-t border-neutral-800 text-xs text-neutral-600 font-mono">
+        <span>{facility.slug}</span>
+        {facility.last_verified && (
+          <span class="ml-4">last verified {facility.last_verified}</span>
+        )}
+      </footer>
+    </div>
+  </Layout>
+) : (
+  <!-- Stub page for test-slug — keeps existing E2E test passing -->
+  <Layout title={`${slug} — US Data Center Watch`}>
+    <div class="max-w-3xl mx-auto px-4 py-12">
+      <h1 class="text-2xl font-semibold text-neutral-100">
+        Facility: <code class="font-mono text-neutral-400">{slug}</code>
+      </h1>
+      <p class="mt-4 text-neutral-400 text-sm">
+        This slug does not match any facility in the dataset.
+      </p>
+    </div>
+  </Layout>
+)}
