@@ -20,12 +20,30 @@ test('about page renders', async ({ page }) => {
   await expect(page.locator('main h1')).toBeVisible();
 });
 
-test('facility dynamic route renders', async ({ page }) => {
+test('facility dynamic route renders (stub)', async ({ page }) => {
   await page.goto('/facility/test-slug');
   // Use main content h1 to avoid Astro dev toolbar elements
   const h1 = page.locator('main h1');
   await expect(h1).toBeVisible();
   await expect(h1).toContainText('test-slug');
+});
+
+test('facility detail page — meta-prineville-or', async ({ page }) => {
+  await page.goto('/facility/meta-prineville-or');
+
+  // Title should mention Prineville
+  await expect(page).toHaveTitle(/Prineville/i);
+
+  // Should show the 250 MW IT load in the big-numbers row
+  const body = page.locator('body');
+  await expect(body).toContainText('250');
+
+  // Should have a "Suggest a correction" link pointing to GitHub issues
+  const correctionLink = page.locator('a[href*="github.com"][href*="issues/new"]').first();
+  await expect(correctionLink).toBeVisible();
+  const href = await correctionLink.getAttribute('href');
+  expect(href).toContain('github.com');
+  expect(href).toContain('issues/new');
 });
 
 test('dark mode is the default', async ({ page }) => {
