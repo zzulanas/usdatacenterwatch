@@ -204,9 +204,6 @@ export function FacilityPanel({ facility, onClose }: FacilityPanelProps) {
           construction_capex_usd={construction_capex_usd}
           reported_annual_mwh={reported_annual_mwh}
           reported_annual_mwh_year={reported_annual_mwh_year}
-          address={address}
-          city={city}
-          state={state}
           county={county}
           tenants={tenants}
           last_verified={last_verified}
@@ -252,9 +249,6 @@ export function FacilityPanel({ facility, onClose }: FacilityPanelProps) {
           construction_capex_usd={construction_capex_usd}
           reported_annual_mwh={reported_annual_mwh}
           reported_annual_mwh_year={reported_annual_mwh_year}
-          address={address}
-          city={city}
-          state={state}
           county={county}
           tenants={tenants}
           last_verified={last_verified}
@@ -296,9 +290,8 @@ interface PanelContentProps {
   construction_capex_usd: number | null;
   reported_annual_mwh: number | null;
   reported_annual_mwh_year: number | null;
-  address: string | null;
-  city: string | null;
-  state: string | null;
+  // address/city/state are folded into `locationLine` by the parent — keep
+  // only `county` on the props for the at-a-glance row.
   county: string | null;
   tenants: string[] | null;
   last_verified: string | null;
@@ -457,7 +450,7 @@ function PanelContent({
           )}
           {cooling_type && (
             <div className="flex justify-between py-1.5">
-              <dt className="text-neutral-500">Cooling</dt>
+              <dt className="text-neutral-500">Cooling type</dt>
               <dd className="text-neutral-100 capitalize">{cooling_type}</dd>
             </div>
           )}
@@ -518,7 +511,7 @@ function PanelContent({
           {reported_annual_mwh != null && (
             <div className="flex justify-between py-1.5">
               <dt className="text-neutral-500">
-                Disclosed electricity
+                Operator-disclosed electricity
                 {reported_annual_mwh_year ? ` (${reported_annual_mwh_year})` : ''}
               </dt>
               <dd className="text-neutral-100 font-mono">{fmt(reported_annual_mwh)} MWh/yr</dd>
@@ -566,6 +559,27 @@ function PanelContent({
               </li>
             ))}
           </ul>
+
+          {/* Methodology footnote — mirrors the disclaimer on the
+              standalone detail page so a user encountering modeled values
+              in the panel gets the same provenance context. */}
+          <div className="mt-3 text-xs text-neutral-500 space-y-1">
+            <p>
+              Energy and water figures are modeled estimates — see the{' '}
+              <a href="/methodology" className="underline decoration-dotted hover:text-neutral-300">
+                methodology page
+              </a>{' '}
+              for the formula, assumptions, and uncertainty ranges.
+            </p>
+            {facility.confidence === 'low' && (
+              <p>
+                This record is marked <strong className="text-neutral-400">low confidence</strong> —
+                it was auto-imported from OpenStreetMap and has not yet been independently verified.
+                Fields like IT load, acreage, and year built may be missing or inaccurate until a
+                curator cross-checks against a primary source.
+              </p>
+            )}
+          </div>
         </div>
       )}
 

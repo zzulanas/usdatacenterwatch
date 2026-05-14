@@ -209,10 +209,13 @@ function MapView() {
     }
   }, []);
 
-  // Close the panel: clear state, revert URL.
+  // Close the panel: clear state, revert URL. Uses replaceState (not
+  // pushState) so opening + closing the panel doesn't stack history entries —
+  // otherwise the back button after a close would replay the open-state URL
+  // and re-open the panel, which is confusing.
   const closePanel = useCallback(() => {
     setSelectedFacility(null);
-    window.history.pushState({}, '', '/');
+    window.history.replaceState({}, '', '/');
   }, []);
 
   // Load facilities from R2 (or fall back to seed data) on mount.
@@ -311,7 +314,12 @@ function MapView() {
     const overlay = new MapboxOverlay({
       interleaved: false,
       layers: [],
-      getTooltip: (info) => buildTooltip(info, isTouchRef.current),
+      // Suppress the tooltip when a facility panel is open — the panel
+      // shows the same info (and more) at z-20, so the lingering tooltip
+      // beneath it is redundant. Especially important on touch where the
+      // tooltip pins on tap and would otherwise stay visible behind the panel.
+      getTooltip: (info) =>
+        selectedFacilityRef.current ? null : buildTooltip(info, isTouchRef.current),
       // Pointer-cursor on facility hover signals the dot is clickable on
       // desktop. Mobile browsers ignore cursor entirely — but deck.gl REQUIRES
       // a function here (passing `undefined` throws `getCursor is not a
@@ -377,14 +385,17 @@ function MapView() {
       radiusMinPixels: 8,
       opacity: 0.7,
       pickable: true,
-      // Both desktop and touch: clicking/tapping a dot opens the side panel.
-      // On touch, the tooltip also pins — the panel sits at z-20 and wins
-      // visually. The "View details →" link in the tooltip gives touch users
-      // an alternative navigation path to the standalone detail page.
+      // Click-on-dot opens the panel; click-on-empty-map closes it. deck.gl
+      // calls onClick with object=undefined when the user clicks empty space
+      // inside the layer's pickable area — making click-outside-to-close a
+      // built-in affordance alongside ESC and the × button.
       onClick: ({ object }) => {
         const f = object as FacilityForMap | undefined;
-        if (!f?.slug) return;
-        openPanel(f);
+        if (f?.slug) {
+          openPanel(f);
+        } else if (selectedFacilityRef.current) {
+          closePanel();
+        }
       },
     });
 
