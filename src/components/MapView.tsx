@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import maplibregl, { type IControl as MaplibreIControl } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { MapboxOverlay } from '@deck.gl/mapbox';
@@ -9,6 +9,10 @@ import { loadFacilities, type FacilityForMap } from '@/lib/load-facilities';
 import { CONFIDENCE_STYLES } from '@/lib/pills';
 import { facilityIssueLink } from '@/lib/format';
 import { FacilityPanel } from '@/components/FacilityPanel';
+import MapFilters from '@/components/MapFilters';
+import { useFilterStore } from '@/stores/filterStore';
+import { applyFilters } from '@/lib/filters';
+import { patchUrl } from '@/lib/url-state';
 
 // Carto Dark Matter: free basemap with state lines, county lines, roads, and place labels.
 // Dark-themed — matches our civic/journalistic aesthetic. Attribution required per Carto TOS.
@@ -191,6 +195,18 @@ function MapView() {
   const [facilities, setFacilities] = useState<FacilityForMap[]>([]);
   const [selectedFacility, setSelectedFacility] = useState<FacilityForMap | null>(null);
 
+  // Filter store: facilities + filters drive what deck.gl renders.
+  const storeFacilities = useFilterStore((s) => s.facilities);
+  const storeFilters = useFilterStore((s) => s.filters);
+  const setStoreFacilities = useFilterStore((s) => s.setFacilities);
+
+  // Filtered list fed to the ScatterplotLayer. useMemo prevents re-filtering
+  // on unrelated re-renders (panel open/close, etc).
+  const filtered = useMemo(
+    () => applyFilters(storeFacilities, storeFilters),
+    [storeFacilities, storeFilters]
+  );
+
   // selectedFacilityRef keeps the deck.gl onClick callback in sync without
   // requiring the layer to be rebuilt on each selection change.
   const selectedFacilityRef = useRef<FacilityForMap | null>(null);
@@ -201,31 +217,37 @@ function MapView() {
   facilitiesRef.current = facilities;
 
   // Open a facility panel: set state, push URL, fly map to location.
+  // patchUrl preserves any filter params already in the URL — see url-state.ts.
   const openPanel = useCallback((f: FacilityForMap) => {
     setSelectedFacility(f);
-    window.history.pushState({ slug: f.slug }, '', `/?f=${f.slug}`);
+    patchUrl({ f: f.slug }, 'push');
     if (mapRef.current) {
       mapRef.current.flyTo({ center: [f.lng, f.lat], zoom: 9, duration: 1000 });
     }
   }, []);
 
-  // Close the panel: clear state, revert URL. Uses replaceState (not
+  // Close the panel: clear state, drop the `f` param. Uses replaceState (not
   // pushState) so opening + closing the panel doesn't stack history entries —
   // otherwise the back button after a close would replay the open-state URL
-  // and re-open the panel, which is confusing.
+  // and re-open the panel, which is confusing. patchUrl({ f: null }) keeps
+  // every other param intact so filters survive panel close.
   const closePanel = useCallback(() => {
     setSelectedFacility(null);
-    window.history.replaceState({}, '', '/');
+    patchUrl({ f: null }, 'replace');
   }, []);
 
-  // Load facilities from R2 (or fall back to seed data) on mount.
+  // Load facilities from R2 (or fall back to seed data) on mount, and push
+  // into the filter store so MapFilters can derive facets and the filtered
+  // selector can drive deck.gl.
   // `cancelled` guards against setState after unmount if the user navigates
   // away mid-fetch — the promise will resolve into a no-op instead.
   useEffect(() => {
     let cancelled = false;
     loadFacilities()
       .then((data) => {
-        if (!cancelled) setFacilities(data);
+        if (cancelled) return;
+        setFacilities(data);
+        setStoreFacilities(data);
       })
       .catch(() => {
         // loadFacilities always resolves; this catch is a safety net
@@ -233,7 +255,7 @@ function MapView() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [setStoreFacilities]);
 
   // On mount: read ?f=slug from URL and pre-open the panel if present.
   // This runs once; openPanel calls flyTo which needs the map to be ready,
@@ -265,12 +287,17 @@ function MapView() {
     return () => clearInterval(poll);
   }, []);
 
-  // Browser back/forward: sync panel state with the history entry.
+  // Browser back/forward: re-sync panel state and filter state from the URL.
+  // patchUrl uses replaceState/pushState which don't trigger popstate, so this
+  // only fires on actual user-initiated history navigation.
   useEffect(() => {
-    function handlePopState(e: PopStateEvent) {
-      const state = e.state as { slug?: string } | null;
-      if (state?.slug) {
-        const target = facilitiesRef.current.find((f) => f.slug === state.slug);
+    function handlePopState() {
+      // Re-derive panel state from the URL (history.state is intentionally
+      // empty in our patchUrl writes — the URL is the source of truth).
+      const params = new URLSearchParams(window.location.search);
+      const slug = params.get('f');
+      if (slug) {
+        const target = facilitiesRef.current.find((f) => f.slug === slug);
         if (target) {
           setSelectedFacility(target);
           if (mapRef.current) {
@@ -280,6 +307,8 @@ function MapView() {
       } else {
         setSelectedFacility(null);
       }
+      // Re-hydrate filter state from the URL (back/forward across filter changes).
+      useFilterStore.getState().hydrateFromUrl();
     }
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
@@ -358,7 +387,7 @@ function MapView() {
     };
   }, []);
 
-  // Update the deck.gl layer whenever facilities data changes.
+  // Update the deck.gl layer whenever the filtered facility set changes.
   // openPanel is stable (useCallback with no deps), so including it here
   // doesn't cause unnecessary layer rebuilds.
   useEffect(() => {
@@ -366,7 +395,7 @@ function MapView() {
 
     const layer = new ScatterplotLayer<Facility>({
       id: 'facilities',
-      data: facilities as Facility[],
+      data: filtered as Facility[],
       getPosition: (f) => [f.lng, f.lat],
       getRadius: (f) => facilityRadius(f.mw),
       // Status drives the dot styling: operational=teal filled, under_construction=
@@ -385,6 +414,12 @@ function MapView() {
       radiusMinPixels: 8,
       opacity: 0.7,
       pickable: true,
+      // updateTriggers tell deck.gl which prop functions to re-evaluate when
+      // their dependent state (in this case `filtered`'s identity) changes.
+      updateTriggers: {
+        getFillColor: filtered,
+        getLineColor: filtered,
+      },
       // Click-on-dot opens the panel; click-on-empty-map closes it. deck.gl
       // calls onClick with object=undefined when the user clicks empty space
       // inside the layer's pickable area — making click-outside-to-close a
@@ -400,7 +435,7 @@ function MapView() {
     });
 
     overlayRef.current.setProps({ layers: [layer] });
-  }, [facilities, openPanel]);
+  }, [filtered, openPanel, closePanel]);
 
   return (
     <div className="relative w-full h-full">
@@ -410,6 +445,7 @@ function MapView() {
         data-testid="map-view"
         aria-label="US Data Center Map"
       />
+      <MapFilters />
       <FacilityPanel facility={selectedFacility} onClose={closePanel} />
     </div>
   );
