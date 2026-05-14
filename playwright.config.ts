@@ -31,6 +31,25 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+      // Skip mobile-only specs on the desktop project so they don't run twice.
+      testIgnore: /.*mobile.*\.spec\.ts/,
+    },
+    // Mobile-emulation project for the touch-vs-pointer code paths in
+    // MapView. PR #26 introduced a touch-only branch where a `getCursor:
+    // undefined` choice crashed the entire deck.gl layer stack — the bug
+    // shipped because all our prior e2e tests ran on Desktop Chrome.
+    // tests/e2e/map-mobile.spec.ts is the regression coverage for that class.
+    // Use Chromium with iPhone 13 viewport + touch profile rather than the
+    // real WebKit binary — CI already installs Chromium with system deps via
+    // `playwright install --with-deps chromium`; adding WebKit would balloon
+    // the cache and require additional libs. Chromium-emulated touch is
+    // sufficient to catch the touch-vs-pointer code paths in MapView.
+    {
+      name: 'mobile-chromium',
+      use: {
+        ...devices['Pixel 5'],
+      },
+      testMatch: /.*mobile.*\.spec\.ts/,
     },
   ],
 });
